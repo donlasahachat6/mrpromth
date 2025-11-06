@@ -3,6 +3,12 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import { encryptSecret, hashIdentifier, maskSecret } from '@/utils/security';
 
+const ALLOWED_PROVIDERS = ['openai', 'anthropic'] as const;
+type ProviderValue = (typeof ALLOWED_PROVIDERS)[number];
+
+const isAllowedProvider = (value: string): value is ProviderValue =>
+  ALLOWED_PROVIDERS.includes(value as ProviderValue);
+
 export async function POST(request: Request) {
   try {
     const supabase = createServerComponentClient({ cookies });
@@ -18,10 +24,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Provider and key are required' }, { status: 400 });
     }
 
+    const normalizedProvider = String(provider).toLowerCase();
+
+    if (!isAllowedProvider(normalizedProvider)) {
+      return NextResponse.json({ error: `Provider "${provider}" is not supported` }, { status: 400 });
+    }
+
+    const trimmedKey = String(key).trim();
+
+    if (!trimmedKey) {
+      return NextResponse.json({ error: 'API key cannot be empty' }, { status: 400 });
+    }
+
     // Encrypt the API key
-    const encryptedKey = encryptSecret(key);
-    const keyHash = hashIdentifier(key);
-    const maskedKey = maskSecret(key);
+    const encryptedKey = encryptSecret(trimmedKey);
+    const keyHash = hashIdentifier(trimmedKey);
+    const maskedKey = maskSecret(trimmedKey);
 
     // Check if key already exists
     const { data: existingKey } = await supabase
@@ -40,7 +58,7 @@ export async function POST(request: Request) {
       .from('api_keys')
       .insert({
         user_id: user.id,
-        provider,
+        provider: normalizedProvider,
         encrypted_key: encryptedKey,
         key_hash: keyHash,
         masked_key: maskedKey,

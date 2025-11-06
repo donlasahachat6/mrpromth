@@ -3,10 +3,67 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import { decryptSecret } from '@/utils/security';
 
+const PROVIDER_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+};
+
+class ProviderTestError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = 'ProviderTestError';
+  }
+}
+
+async function verifyOpenAI(key: string): Promise<string> {
+  const response = await fetch('https://api.openai.com/v1/models', {
+    headers: {
+      Authorization: `Bearer ${key}`,
+    },
+  });
+
+  if (!response.ok) {
+    const detail = (await response.text()) || response.statusText || 'OpenAI API error';
+    throw new ProviderTestError(detail, response.status);
+  }
+
+  return 'OpenAI key verified successfully.';
+}
+
+async function verifyAnthropic(key: string): Promise<string> {
+  const response = await fetch('https://api.anthropic.com/v1/models', {
+    headers: {
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+    },
+  });
+
+  if (!response.ok) {
+    const detail = (await response.text()) || response.statusText || 'Anthropic API error';
+    throw new ProviderTestError(detail, response.status);
+  }
+
+  return 'Anthropic key verified successfully.';
+}
+
+async function verifyProvider(provider: string, key: string): Promise<string> {
+  const normalized = provider.toLowerCase();
+  switch (normalized) {
+    case 'openai':
+      return await verifyOpenAI(key);
+    case 'anthropic':
+      return await verifyAnthropic(key);
+    default:
+      throw new ProviderTestError(`Provider "${provider}" is not supported for verification.`, 400);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createServerComponentClient({ cookies });
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,7 +75,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Key ID is required' }, { status: 400 });
     }
 
-    // Fetch the encrypted key
     const { data: apiKey, error: fetchError } = await supabase
       .from('api_keys')
       .select('id, provider, encrypted_key')
@@ -30,43 +86,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'API key not found' }, { status: 404 });
     }
 
-    // Decrypt the key
     const decryptedKey = decryptSecret(apiKey.encrypted_key);
 
-    // Test the connection with Streamlake
     try {
-      const testResponse = await fetch('https://api.streamlake.ai/v1/models', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${decryptedKey}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const message = await verifyProvider(apiKey.provider, decryptedKey);
 
-      if (testResponse.ok) {
-        // Update last_used timestamp
-        await supabase
-          .from('api_keys')
-          .update({ last_used: new Date().toISOString() })
-          .eq('id', key_id)
-          .eq('user_id', user.id);
+      await supabase
+        .from('api_keys')
+        .update({ last_used: new Date().toISOString() })
+        .eq('id', key_id)
+        .eq('user_id', user.id);
 
-        return NextResponse.json({
-          success: true,
-          message: 'Connection test successful!'
-        });
-      } else {
-        const errorData = await testResponse.text();
-        return NextResponse.json({
-          success: false,
-          message: `Streamlake API error: ${errorData || 'Unknown error'}`
-        }, { status: testResponse.status });
+      const providerLabel = PROVIDER_LABELS[apiKey.provider.toLowerCase()] ?? apiKey.provider;
+
+      return NextResponse.json({ success: true, message: message || `${providerLabel} connection verified.` });
+    } catch (error) {
+      if (error instanceof ProviderTestError) {
+        return NextResponse.json({ error: error.message }, { status: error.status });
       }
-    } catch (testError) {
-      return NextResponse.json({
-        success: false,
-        message: `Connection test failed: ${testError instanceof Error ? testError.message : 'Unknown error'}`
-      }, { status: 500 });
+
+      const detail = error instanceof Error ? error.message : 'Unknown provider verification failure';
+      return NextResponse.json({ error: detail }, { status: 500 });
     }
   } catch (error) {
     console.error('Error testing API key:', error);
