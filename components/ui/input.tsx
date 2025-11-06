@@ -1,27 +1,23 @@
-import { forwardRef } from "react";
-import type { InputHTMLAttributes, ReactNode } from "react";
-import { twMerge } from "tailwind-merge";
+import * as React from "react";
 
-interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-}
+import { cn } from "@/lib/utils";
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, prefix, suffix, type = "text", ...props }, ref) => {
-    return (
-      <div className={twMerge("flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2", className)}>
-        {prefix ? <span className="text-sm text-muted-foreground">{prefix}</span> : null}
-        <input
-          ref={ref}
-          type={type}
-          className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-          {...props}
-        />
-        {suffix ? <span className="text-sm text-muted-foreground">{suffix}</span> : null}
-      </div>
-    );
-  }
-);
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type = "text", ...props }, ref) => {
+  return (
+    <input
+      type={type}
+      className={cn(
+        "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      ref={ref}
+      {...props}
+    />
+  );
+});
 
 Input.displayName = "Input";
+
+export { Input };

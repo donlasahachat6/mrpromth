@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ReactNode } from "react";
+import { Inter } from "next/font/google";
+import type { ReactNode } from "react";
 
 import "./globals.css";
 
@@ -8,9 +9,11 @@ export const metadata: Metadata = {
   description: "An all-in-one workspace for crafting, managing, and executing AI prompts.",
 };
 
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`${inter.variable} dark`}>
       <body className="min-h-screen bg-background text-foreground antialiased">
         {children}
       </body>

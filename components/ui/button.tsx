@@ -1,50 +1,63 @@
-import { forwardRef } from "react";
-import type { ButtonHTMLAttributes } from "react";
-import { twMerge } from "tailwind-merge";
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "outline" | "destructive";
-  size?: "sm" | "md" | "lg" | "icon";
+import { cn } from "@/lib/utils";
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ring-offset-background",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        outline: "border border-input bg-background hover:bg-accent/80 hover:text-accent-foreground",
+        ghost: "hover:bg-accent/60 hover:text-accent-foreground",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
   isLoading?: boolean;
 }
 
-const baseClasses =
-  "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50";
+const Spinner = () => (
+  <span className="mr-2 inline-flex h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+);
 
-const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-accent text-white hover:bg-accent/90",
-  secondary: "bg-muted text-foreground hover:bg-muted/80",
-  ghost: "bg-transparent hover:bg-muted/60",
-  outline: "border border-border hover:bg-muted/40",
-  destructive: "bg-red-600 text-white hover:bg-red-700",
-};
-
-const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
-  sm: "px-3 py-2 text-sm",
-  md: "px-4 py-2 text-sm",
-  lg: "px-6 py-3 text-base",
-  icon: "h-9 w-9",
-};
-
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", className, children, isLoading = false, disabled, ...props }, ref) => {
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, isLoading = false, disabled, children, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
     return (
-      <button
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }), "gap-2")}
         ref={ref}
-        className={twMerge(
-          baseClasses,
-          variantClasses[variant],
-          sizeClasses[size],
-          className
-        )}
         disabled={disabled || isLoading}
         {...props}
       >
-        {isLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent" /> : null}
-        <span className={isLoading ? "ml-2" : undefined}>{children}</span>
-      </button>
+        {isLoading ? <Spinner /> : null}
+        {children}
+      </Comp>
     );
   }
 );
 
 Button.displayName = "Button";
+
+export { Button, buttonVariants };
