@@ -87,17 +87,22 @@ export default function ProductionTestPage() {
     }
 
     // Test 4: Chat API
-    try {
-      const chatResponse = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: 'Hello, test message',
-          sessionId: 'test-session'
+      try {
+        const chatResponse = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: 'test-session',
+            stream: false,
+            provider: 'openai',
+            messages: [
+              { role: 'system', content: 'You are a helpful test assistant.' },
+              { role: 'user', content: 'Hello, test message' }
+            ]
+          })
         })
-      })
 
       newTests.push({
         name: 'Chat API',

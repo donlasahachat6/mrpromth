@@ -18,13 +18,17 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create api_credentials table
-CREATE TABLE IF NOT EXISTS api_credentials (
+-- Create api_keys table
+CREATE TABLE IF NOT EXISTS api_keys (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     provider TEXT NOT NULL,
     encrypted_key TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    key_hash TEXT NOT NULL,
+    masked_key TEXT NOT NULL,
+    last_used TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create chat_sessions table
@@ -82,7 +86,7 @@ CREATE TABLE IF NOT EXISTS prompt_usage_logs (
 
 -- Enable Row-Level Security (RLS) on all user-owned tables
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE api_credentials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
@@ -99,17 +103,17 @@ CREATE POLICY "Users can update their own profile" ON profiles
 CREATE POLICY "Users can insert their own profile" ON profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Create policies for api_credentials table
-CREATE POLICY "Users can view their own API credentials" ON api_credentials
+-- Create policies for api_keys table
+CREATE POLICY "Users can view their own API keys" ON api_keys
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert their own API credentials" ON api_credentials
+CREATE POLICY "Users can insert their own API keys" ON api_keys
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own API credentials" ON api_credentials
+CREATE POLICY "Users can update their own API keys" ON api_keys
     FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own API credentials" ON api_credentials
+CREATE POLICY "Users can delete their own API keys" ON api_keys
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Create policies for chat_sessions table
@@ -234,8 +238,9 @@ CREATE POLICY "Users can insert prompt usage logs for their own prompts" ON prom
     );
 
 -- Create indexes for performance optimization
-CREATE INDEX IF NOT EXISTS idx_api_credentials_user_id ON api_credentials(user_id);
-CREATE INDEX IF NOT EXISTS idx_api_credentials_provider ON api_credentials(provider);
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_provider ON api_keys(provider);
+CREATE INDEX IF NOT EXISTS idx_api_keys_created_at ON api_keys(created_at);
 
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_sessions_created_at ON chat_sessions(created_at);
@@ -270,12 +275,13 @@ $$ language 'plpgsql';
 
 -- Create triggers to automatically update updated_at timestamp
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_api_keys_updated_at BEFORE UPDATE ON api_keys FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_chat_sessions_updated_at BEFORE UPDATE ON chat_sessions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_prompts_updated_at BEFORE UPDATE ON prompts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Add comments for documentation
 COMMENT ON TABLE profiles IS 'User profiles extending Supabase auth users';
-COMMENT ON TABLE api_credentials IS 'Encrypted AI provider credentials per user';
+COMMENT ON TABLE api_keys IS 'Encrypted AI provider credentials per user';
 COMMENT ON TABLE chat_sessions IS 'Chat workspaces between user and AI';
 COMMENT ON TABLE messages IS 'Messages exchanged within chat sessions';
 COMMENT ON TABLE prompts IS 'User-authored prompt templates';

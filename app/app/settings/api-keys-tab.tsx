@@ -1,32 +1,49 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Key, Check, X, Loader2, RefreshCw } from 'lucide-react';
 
 interface APIKey {
   id: string;
   provider: string;
-  key_hash: string;
   masked_key: string;
   last_used: string | null;
   created_at: string;
 }
 
+const PROVIDER_LABELS = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic (Claude)',
+} as const;
+
+type ProviderValue = keyof typeof PROVIDER_LABELS;
+
+const PROVIDER_OPTIONS: Array<{ value: ProviderValue; label: string }> = (
+  Object.entries(PROVIDER_LABELS) as Array<[ProviderValue, string]>
+).map(([value, label]) => ({ value, label }));
+
+const PROVIDER_PLACEHOLDERS: Record<ProviderValue, string> = {
+  openai: 'sk-... (OpenAI secret key)',
+  anthropic: 'sk-ant-... (Claude API key)',
+};
+
 export function APIKeysTab() {
   const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
   const [newApiKey, setNewApiKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
+  const [testingKeyId, setTestingKeyId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const supabase = createClientComponentClient();
+  const [selectedProvider, setSelectedProvider] = useState<ProviderValue>('openai');
+
+  const resolveProviderLabel = (provider: string) =>
+    PROVIDER_LABELS[provider as ProviderValue] ?? provider;
 
   useEffect(() => {
     fetchAPIKeys();
@@ -34,20 +51,17 @@ export function APIKeysTab() {
 
   const fetchAPIKeys = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const response = await fetch('/api/api-keys');
+      if (!response.ok) {
+        throw new Error('Unable to load API keys');
+      }
 
-      const { data, error } = await supabase
-        .from('api_keys')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setApiKeys(data || []);
-    } catch (error) {
+      const payload = await response.json();
+      const keys = Array.isArray(payload.keys) ? payload.keys : [];
+      setApiKeys(keys);
+    } catch (err) {
       setError('Failed to fetch API keys');
-      console.error('Error fetching API keys:', error);
+      console.error('Error fetching API keys:', err);
     }
   };
 
@@ -58,18 +72,15 @@ export function APIKeysTab() {
     setIsSaving(true);
     setError(null);
     setSuccess(null);
+    setTestResult(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const response = await fetch('/api/api-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          provider: 'streamlake',
+          provider: selectedProvider,
           key: newApiKey.trim(),
-          user_id: user.id,
         }),
       });
 
@@ -79,7 +90,7 @@ export function APIKeysTab() {
         throw new Error(result.error || 'Failed to save API key');
       }
 
-      setSuccess('API key saved successfully!');
+      setSuccess(`${PROVIDER_LABELS[selectedProvider]} API key saved successfully!`);
       setNewApiKey('');
       fetchAPIKeys();
     } catch (error) {
@@ -90,7 +101,7 @@ export function APIKeysTab() {
   };
 
   const handleTestConnection = async (keyId: string) => {
-    setIsTesting(true);
+    setTestingKeyId(keyId);
     setTestResult(null);
     setError(null);
 
@@ -108,13 +119,14 @@ export function APIKeysTab() {
       }
 
       setTestResult({ success: true, message: result.message });
+      fetchAPIKeys();
     } catch (error) {
       setTestResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Connection test failed'
+        message: error instanceof Error ? error.message : 'Connection test failed',
       });
     } finally {
-      setIsTesting(false);
+      setTestingKeyId(null);
     }
   };
 
@@ -154,7 +166,7 @@ export function APIKeysTab() {
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-2">API Keys</h2>
         <p className="text-muted-foreground">
-          Manage your Streamlake API keys for use with Mr.Prompt
+          Manage the API keys Mr.Prompt uses when calling OpenAI and Anthropic models.
         </p>
       </div>
 
@@ -198,22 +210,41 @@ export function APIKeysTab() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAddKey} className="space-y-4">
-            <div>
-              <label htmlFor="api-key" className="block text-sm font-medium text-foreground mb-2">
-                Streamlake API Key
-              </label>
-              <Input
-                id="api-key"
-                type="password"
-                value={newApiKey}
-                onChange={(e) => setNewApiKey(e.target.value)}
-                placeholder="Enter your Streamlake API key"
-                disabled={isSaving}
-                className="max-w-md"
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Your API key will be encrypted and securely stored
-              </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="provider" className="block text-sm font-medium text-foreground mb-2">
+                  Provider
+                </label>
+                <select
+                  id="provider"
+                  value={selectedProvider}
+                  onChange={(event) => setSelectedProvider(event.target.value as ProviderValue)}
+                  disabled={isSaving}
+                  className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {PROVIDER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="api-key" className="block text-sm font-medium text-foreground mb-2">
+                  API Key
+                </label>
+                <Input
+                  id="api-key"
+                  type="password"
+                  value={newApiKey}
+                  onChange={(e) => setNewApiKey(e.target.value)}
+                  placeholder={PROVIDER_PLACEHOLDERS[selectedProvider]}
+                  disabled={isSaving}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Keys are encrypted at rest. Mr.Prompt only forwards them to the selected provider during requests.
+                </p>
+              </div>
             </div>
             <Button type="submit" disabled={isSaving || !newApiKey.trim()}>
               {isSaving ? (
@@ -230,76 +261,76 @@ export function APIKeysTab() {
       </Card>
 
       {/* Existing API Keys */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Saved API Keys
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {apiKeys.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              No API keys saved yet. Add your first key above.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {apiKeys.map((key) => (
-                <div
-                  key={key.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-medium">{key.provider}</span>
-                      <span className="text-sm text-muted-foreground">
-                        Created: {new Date(key.created_at).toLocaleDateString()}
-                      </span>
-                      {key.last_used && (
-                        <span className="text-sm text-muted-foreground">
-                          Last used: {new Date(key.last_used).toLocaleDateString()}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Saved API Keys
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {apiKeys.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                No API keys saved yet. Add your first key above.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {apiKeys.map((key) => (
+                  <div
+                    key={key.id}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium uppercase text-muted-foreground">
+                          {resolveProviderLabel(key.provider)}
                         </span>
-                      )}
+                        <span className="text-sm text-muted-foreground">
+                          Created: {new Date(key.created_at).toLocaleDateString()}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          Last used: {key.last_used ? new Date(key.last_used).toLocaleString() : 'Never'}
+                        </span>
+                      </div>
+                      <div className="text-sm font-mono bg-muted px-2 py-1 rounded inline-block">
+                        {key.masked_key}
+                      </div>
                     </div>
-                    <div className="text-sm font-mono bg-muted px-2 py-1 rounded inline-block">
-                      {key.masked_key}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTestConnection(key.id)}
+                        disabled={testingKeyId !== null}
+                      >
+                        {testingKeyId === key.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            Verify
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteKey(key.id)}
+                        disabled={isDeleting === key.id}
+                      >
+                        {isDeleting === key.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          'Delete'
+                        )}
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTestConnection(key.id)}
-                      disabled={isTesting}
-                    >
-                      {isTesting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-1" />
-                          Test
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteKey(key.id)}
-                      disabled={isDeleting === key.id}
-                    >
-                      {isDeleting === key.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        'Delete'
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
     </div>
   );
 }
