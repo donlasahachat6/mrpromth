@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 -- Create api_keys table
 CREATE TABLE IF NOT EXISTS api_keys (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     provider TEXT NOT NULL,
     encrypted_key TEXT NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
 
 -- Create chat_sessions table
 CREATE TABLE IF NOT EXISTS chat_sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     metadata JSONB,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS chat_sessions (
 
 -- Create messages table
 CREATE TABLE IF NOT EXISTS messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
     sender TEXT NOT NULL CHECK (sender IN ('user', 'assistant', 'system')),
     content TEXT NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS messages (
 
 -- Create prompts table
 CREATE TABLE IF NOT EXISTS prompts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS prompts (
 
 -- Create prompt_versions table
 CREATE TABLE IF NOT EXISTS prompt_versions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
     version INTEGER NOT NULL,
     content TEXT NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS prompt_versions (
 
 -- Create prompt_usage_logs table
 CREATE TABLE IF NOT EXISTS prompt_usage_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     prompt_id UUID NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
     session_id UUID REFERENCES chat_sessions(id) ON DELETE SET NULL,
     executed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

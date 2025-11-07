@@ -3,7 +3,7 @@
 
 -- Projects table keeps track of each agent chain execution
 CREATE TABLE IF NOT EXISTS projects (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   user_prompt TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS projects (
 
 -- Execution log table for individual agent steps
 CREATE TABLE IF NOT EXISTS agent_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   agent_number INTEGER NOT NULL,
   agent_name TEXT NOT NULL,
