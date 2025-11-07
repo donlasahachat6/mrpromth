@@ -29,7 +29,9 @@ export async function GET() {
     // Test authentication system
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    if (authError && authError.code !== 'JWT_EXPIRED') {
+    // Auth errors are OK for health check - we just want to know the service is responding
+    // Only fail if there's a critical auth system error
+    if (authError && authError.code !== 'JWT_EXPIRED' && authError.message !== 'Auth session missing!') {
       return NextResponse.json(
         {
           status: "error",
