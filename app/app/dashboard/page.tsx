@@ -307,11 +307,10 @@ export default function DashboardPage() {
               Agent Chain Platform
             </span>
             <h1 className="text-4xl font-semibold leading-tight text-foreground md:text-5xl">
-              เปลี่ยนไอเดียให้เป็นเว็บไซต์พร้อมใช้งานในไม่กี่นาที
+              สร้างเว็บไซต์ด้วย AI
             </h1>
             <p className="text-lg leading-relaxed text-muted-foreground md:max-w-2xl">
-              Mr.Promth จัดการทุกขั้นตอนตั้งแต่ขยายความต้องการ วางโครงสร้างระบบ พัฒนาโค้ด ไปจนถึงพร้อม deploy
-              ด้วยเอเจนต์ 7 ตัวที่ทำงานต่อเนื่องแบบอัตโนมัติ
+              บอก AI ว่าคุณต้องการเว็บไซต์แบบไหน แล้ว AI จะสร้างให้คุณ
             </p>
             <div className="grid gap-4 sm:grid-cols-3">
               {stats.map((stat) => (
