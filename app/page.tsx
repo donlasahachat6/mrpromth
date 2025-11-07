@@ -48,13 +48,13 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="container flex flex-col items-center justify-center py-24 md:py-32">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-8">
+          <div className="mb-12">
             <Image
               src="/logo-new-light.png"
               alt="Mr.Prompt"
-              width={400}
-              height={120}
-              className="mx-auto opacity-60"
+              width={600}
+              height={180}
+              className="mx-auto opacity-70"
               priority
             />
           </div>

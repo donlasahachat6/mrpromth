@@ -301,48 +301,6 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col gap-10 pb-12">
       <section className="rounded-4xl border border-border/60 bg-card/95 p-10 shadow-xl shadow-primary/10">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-          <div className="space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-              Agent Chain Platform
-            </span>
-            <h1 className="text-4xl font-semibold leading-tight text-foreground md:text-5xl">
-              สร้างเว็บไซต์ด้วย AI
-            </h1>
-            <p className="text-lg leading-relaxed text-muted-foreground md:max-w-2xl">
-              บอก AI ว่าคุณต้องการเว็บไซต์แบบไหน แล้ว AI จะสร้างให้คุณ
-            </p>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-border/60 bg-background/80 px-4 py-5 text-center shadow-sm"
-                >
-                  <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex h-full flex-col justify-between gap-6 rounded-3xl border border-secondary/30 bg-secondary/10 p-6 text-secondary-foreground">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-secondary-foreground/70">
-                Agent Chain Flow
-              </p>
-              <p className="mt-4 text-2xl font-semibold">
-                User Prompt → Agent 1 → … → Agent 7 → Production
-              </p>
-            </div>
-            <div className="rounded-2xl border border-secondary/40 bg-background/60 px-4 py-4 text-sm text-muted-foreground">
-              <p className="font-medium text-secondary-foreground">
-                ใช้ VanchinAI เป็นสมองหลัก พร้อมฐานข้อมูล Supabase และ deploy บน Vercel
-              </p>
-              <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground/80">
-                Tech Stack: Next.js 14 · React 18 · Tailwind CSS
-              </p>
-            </div>
-          </div>
-        </div>
 
         {errorMessage ? (
           <div className="mt-6 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">

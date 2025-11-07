@@ -113,7 +113,7 @@ export function PromptInput({ onGenerate, isLoading = false }: PromptInputProps)
           onChange={(event) => setPrompt(event.target.value)}
           placeholder="ตัวอย่าง: สร้างเว็บสำหรับเวิร์คช็อปสอนทำขนม มีระบบจองรอบและเก็บอีเมลลูกค้า"
           className="mt-3 w-full resize-y rounded-2xl border border-border/80 bg-card/90 px-4 py-3 text-base leading-7 text-foreground shadow-inner outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/20"
-          rows={4}
+          rows={8}
           disabled={isLoading}
         />
 
@@ -194,21 +194,7 @@ export function PromptInput({ onGenerate, isLoading = false }: PromptInputProps)
           </Button>
         </div>
 
-        {/* Example Prompts */}
-        <div className="mt-6 flex flex-wrap gap-2 text-xs text-muted-foreground">
-          <span className="text-xs font-medium">ตัวอย่าง:</span>
-          {examplePrompts.map((example) => (
-            <button
-              type="button"
-              key={example}
-              className="rounded-full border border-border/70 bg-muted/30 px-3 py-1 font-medium text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-              onClick={() => setPrompt(example)}
-              disabled={isLoading}
-            >
-              {example}
-            </button>
-          ))}
-        </div>
+
 
         {/* Mode Description */}
         <div className="mt-4 rounded-lg border border-border/50 bg-muted/30 p-3 text-xs text-muted-foreground">
