@@ -23,34 +23,26 @@ export function TerminalAccess({ projectId, isActive = false, onStop }: Terminal
   const terminalEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!isActive) return
+    if (!isActive || !projectId) return
 
-    // Simulate AI commands
-    const mockCommands: TerminalCommand[] = [
-      {
-        id: '1',
-        command: 'npm create next-app@latest my-project',
-        output: 'Creating a new Next.js app in /workspace/my-project...',
-        timestamp: new Date(),
-        status: 'completed',
-      },
-      {
-        id: '2',
-        command: 'cd my-project && npm install',
-        output: 'Installing dependencies...\nadded 324 packages in 12s',
-        timestamp: new Date(),
-        status: 'completed',
-      },
-      {
-        id: '3',
-        command: 'npx prisma init',
-        output: 'Setting up Prisma...\n✔ Your Prisma schema was created at prisma/schema.prisma',
-        timestamp: new Date(),
-        status: 'running',
-      },
-    ]
+    // Fetch terminal commands from API
+    const fetchCommands = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/terminal`)
+        if (response.ok) {
+          const data = await response.json()
+          setCommands(data.commands || [])
+        }
+      } catch (error) {
+        console.error('Error fetching terminal commands:', error)
+      }
+    }
 
-    setCommands(mockCommands)
+    fetchCommands()
+
+    // Poll for updates every 2 seconds
+    const interval = setInterval(fetchCommands, 2000)
+    return () => clearInterval(interval)
   }, [isActive, projectId])
 
   useEffect(() => {

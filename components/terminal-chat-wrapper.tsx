@@ -94,7 +94,7 @@ export function TerminalChatWrapper({
         <div className="text-green-600 text-sm">
           <p>Mr.Prompt Terminal Chat v1.0.0</p>
           <p>พิมพ์ข้อความเพื่อเริ่มสนทนากับ AI...</p>
-          <p className="text-xs mt-1">พิมพ์ 'help' เพื่อดูคำสั่งที่ใช้ได้</p>
+          <p className="text-xs mt-1">พิมพ์ &apos;help&apos; เพื่อดูคำสั่งที่ใช้ได้</p>
         </div>
 
         {/* Chat Messages */}

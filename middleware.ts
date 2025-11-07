@@ -54,12 +54,10 @@ export async function middleware(req: NextRequest) {
   // Update last_sign_in_at when user accesses the app
   if (session && isProtectedPath) {
     // Update last sign in time (fire and forget)
-    supabase
+    void supabase
       .from('profiles')
       .update({ last_sign_in_at: new Date().toISOString() })
-      .eq('id', session.user.id)
-      .then(() => {})
-      .catch(() => {});
+      .eq('id', session.user.id);
   }
 
   // If user is authenticated and trying to access login/signup pages

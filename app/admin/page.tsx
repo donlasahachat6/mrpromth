@@ -2,355 +2,328 @@
 
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { Users, Key, FileText, Settings, Activity } from 'lucide-react';
+import { 
+  Users, 
+  Activity, 
+  Database, 
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
 
-interface User {
-  id: string;
-  email: string;
-  created_at: string;
-  last_sign_in_at: string | null;
+interface DashboardStats {
+  totalUsers: number
+  activeUsers: number
+  totalProjects: number
+  totalApiKeys: number
+  recentActivities: number
 }
 
-interface APIKey {
-  id: string;
-  name: string;
-  key: string;
-  created_at: string;
+interface RecentActivity {
+  id: string
+  user_id: string
+  action: string
+  resource_type: string
+  created_at: string
+  user_email?: string
 }
 
-interface Log {
-  id: string;
-  timestamp: string;
-  level: 'info' | 'error' | 'warning';
-  message: string;
-}
-
-interface SystemStatus {
-  agents: number;
-  status: string;
-  vercel: string;
-}
-
-export default function AdminPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [apiKeys, setAPIKeys] = useState<APIKey[]>([]);
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
-    agents: 7,
-    status: 'IDLE',
-    vercel: 'Connected'
-  });
-  const [loading, setLoading] = useState(true);
-  const supabase = createClientComponentClient();
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalProjects: 0,
+    totalApiKeys: 0,
+    recentActivities: 0
+  })
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadDashboardData()
+  }, [])
 
-  const loadData = async () => {
-    setLoading(true);
+  const loadDashboardData = async () => {
+    setLoading(true)
+    setError(null)
+    
     try {
-      // Load users (mock data for now)
-      setUsers([
-        {
-          id: '1',
-          email: 'user1@example.com',
-          created_at: new Date().toISOString(),
-          last_sign_in_at: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          email: 'user2@example.com',
-          created_at: new Date().toISOString(),
-          last_sign_in_at: null,
-        },
-      ]);
+      // Load users count
+      const { count: totalUsersCount, error: usersError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
 
-      // Load API keys (mock data)
-      setAPIKeys([
-        {
-          id: '1',
-          name: 'Production Key',
-          key: 'sk_prod_**********************',
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      if (usersError) throw usersError
 
-      // Load logs (mock data)
-      setLogs([
-        {
-          id: '1',
-          timestamp: new Date().toISOString(),
-          level: 'info',
-          message: 'System started successfully',
-        },
-        {
-          id: '2',
-          timestamp: new Date().toISOString(),
-          level: 'error',
-          message: 'Failed to connect to database',
-        },
-      ]);
-    } catch (error) {
-      console.error('Error loading admin data:', error);
+      // Load active users count
+      const { count: activeUsersCount, error: activeUsersError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+
+      if (activeUsersError) throw activeUsersError
+
+      // Load projects count
+      const { count: projectsCount, error: projectsError } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+
+      if (projectsError) throw projectsError
+
+      // Load API keys count
+      const { count: apiKeysCount, error: apiKeysError } = await supabase
+        .from('api_keys')
+        .select('*', { count: 'exact', head: true })
+
+      if (apiKeysError) throw apiKeysError
+
+      // Load recent activities
+      const { data: activitiesData, error: activitiesError } = await supabase
+        .from('activity_logs')
+        .select(`
+          id,
+          user_id,
+          action,
+          resource_type,
+          created_at
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (activitiesError) throw activitiesError
+
+      // Get user emails for activities
+      const activitiesWithEmails = await Promise.all(
+        (activitiesData || []).map(async (activity) => {
+          const { data: userData } = await supabase.auth.admin.getUserById(activity.user_id)
+          return {
+            ...activity,
+            user_email: userData?.user?.email || 'Unknown'
+          }
+        })
+      )
+
+      setStats({
+        totalUsers: totalUsersCount || 0,
+        activeUsers: activeUsersCount || 0,
+        totalProjects: projectsCount || 0,
+        totalApiKeys: apiKeysCount || 0,
+        recentActivities: activitiesData?.length || 0
+      })
+
+      setRecentActivities(activitiesWithEmails)
+    } catch (err: any) {
+      console.error('Error loading dashboard data:', err)
+      setError(err.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const deleteUser = async (userId: string) => {
-    if (!confirm('คุณแน่ใจหรือไม่ที่จะลบผู้ใช้นี้?')) return;
-    
-    // TODO: Implement user deletion
-    setUsers(prev => prev.filter(u => u.id !== userId));
-  };
+  const getActionLabel = (action: string) => {
+    const labels: Record<string, string> = {
+      'create_project': 'สร้างโปรเจค',
+      'update_project': 'อัปเดตโปรเจค',
+      'delete_project': 'ลบโปรเจค',
+      'create_api_key': 'สร้าง API Key',
+      'delete_api_key': 'ลบ API Key',
+      'update_system_setting': 'อัปเดตการตั้งค่า',
+      'create_system_setting': 'สร้างการตั้งค่า',
+      'user_login': 'เข้าสู่ระบบ',
+      'user_logout': 'ออกจากระบบ'
+    }
+    return labels[action] || action
+  }
 
-  const deleteAPIKey = async (keyId: string) => {
-    if (!confirm('คุณแน่ใจหรือไม่ที่จะลบ API Key นี้?')) return;
-    
-    // TODO: Implement API key deletion
-    setAPIKeys(prev => prev.filter(k => k.id !== keyId));
-  };
+  const getResourceTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'project': 'โปรเจค',
+      'api_key': 'API Key',
+      'system_setting': 'การตั้งค่า',
+      'user': 'ผู้ใช้'
+    }
+    return labels[type] || type
+  }
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
-    );
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-lg bg-red-50 p-6">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="h-6 w-6 text-red-600" />
+          <div>
+            <h3 className="text-lg font-semibold text-red-900">เกิดข้อผิดพลาด</h3>
+            <p className="text-sm text-red-700 mt-1">{error}</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Admin Panel</h1>
-        <p className="text-muted-foreground">จัดการระบบ Mr.Prompt</p>
+    <div className="space-y-6">
+      {/* Stats Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">ผู้ใช้ทั้งหมด</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalUsers}</p>
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">ผู้ใช้ที่ Active</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.activeUsers}</p>
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">โปรเจคทั้งหมด</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalProjects}</p>
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg">
+              <Database className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">API Keys</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalApiKeys}</p>
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-orange-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="users">
-            <Users className="h-4 w-4 mr-2" />
-            Users
-          </TabsTrigger>
-          <TabsTrigger value="api-keys">
-            <Key className="h-4 w-4 mr-2" />
-            API Keys
-          </TabsTrigger>
-          <TabsTrigger value="logs">
-            <FileText className="h-4 w-4 mr-2" />
-            Logs
-          </TabsTrigger>
-          <TabsTrigger value="status">
-            <Activity className="h-4 w-4 mr-2" />
-            Status
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Users Tab */}
-        <TabsContent value="users" className="space-y-4">
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead>Last Sign In</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.email}</TableCell>
-                    <TableCell>{new Date(user.created_at).toLocaleDateString('th-TH')}</TableCell>
-                    <TableCell>
-                      {user.last_sign_in_at 
-                        ? new Date(user.last_sign_in_at).toLocaleDateString('th-TH')
-                        : 'Never'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteUser(user.id)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      {/* Recent Activities */}
+      <div className="rounded-lg border bg-white shadow-sm">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-gray-600" />
+            <h3 className="text-lg font-semibold text-gray-900">กิจกรรมล่าสุด</h3>
           </div>
-        </TabsContent>
-
-        {/* API Keys Tab */}
-        <TabsContent value="api-keys" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">API Keys</h2>
-            <Button>
-              <Key className="h-4 w-4 mr-2" />
-              Create New Key
-            </Button>
-          </div>
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Key</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {apiKeys.map((key) => (
-                  <TableRow key={key.id}>
-                    <TableCell className="font-medium">{key.name}</TableCell>
-                    <TableCell className="font-mono text-sm">{key.key}</TableCell>
-                    <TableCell>{new Date(key.created_at).toLocaleDateString('th-TH')}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deleteAPIKey(key.id)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        {/* Logs Tab */}
-        <TabsContent value="logs" className="space-y-4">
-          <div className="flex gap-2">
-            <Input placeholder="Search logs..." className="max-w-sm" />
-            <Button variant="outline">Search</Button>
-          </div>
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Message</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="font-mono text-sm">
-                      {new Date(log.timestamp).toLocaleString('th-TH')}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        log.level === 'error' ? 'bg-red-100 text-red-700' :
-                        log.level === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {log.level.toUpperCase()}
+        </div>
+        
+        <div className="divide-y divide-gray-200">
+          {recentActivities.length === 0 ? (
+            <div className="px-6 py-8 text-center text-gray-500">
+              ยังไม่มีกิจกรรม
+            </div>
+          ) : (
+            recentActivities.map((activity) => (
+              <div key={activity.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900">
+                        {activity.user_email}
                       </span>
-                    </TableCell>
-                    <TableCell>{log.message}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
+                      <span className="text-gray-500">·</span>
+                      <span className="text-sm text-gray-600">
+                        {getActionLabel(activity.action)}
+                      </span>
+                      {activity.resource_type && (
+                        <>
+                          <span className="text-gray-500">·</span>
+                          <span className="text-sm text-gray-500">
+                            {getResourceTypeLabel(activity.resource_type)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                      <Clock className="h-3 w-3" />
+                      {new Date(activity.created_at).toLocaleString('th-TH', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
-        {/* Status Tab */}
-        <TabsContent value="status" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-lg border bg-card p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Agents</p>
-                  <p className="text-2xl font-bold">{systemStatus.agents}</p>
-                </div>
-                <Activity className="h-8 w-8 text-muted-foreground" />
-              </div>
+      {/* Quick Actions */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <a
+          href="/admin/users"
+          className="rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
+              <Users className="h-6 w-6 text-blue-600" />
             </div>
-            
-            <div className="rounded-lg border bg-card p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Status</p>
-                  <p className="text-2xl font-bold">{systemStatus.status}</p>
-                </div>
-                <div className={`h-3 w-3 rounded-full ${
-                  systemStatus.status === 'IDLE' ? 'bg-green-500' : 'bg-yellow-500'
-                }`} />
-              </div>
-            </div>
-            
-            <div className="rounded-lg border bg-card p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Vercel</p>
-                  <p className="text-2xl font-bold">{systemStatus.vercel}</p>
-                </div>
-                <div className="h-3 w-3 rounded-full bg-green-500" />
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-4">
-          <div className="rounded-lg border p-6 space-y-4">
             <div>
-              <h3 className="text-lg font-semibold mb-2">System Settings</h3>
-              <p className="text-sm text-muted-foreground">
-                ตั้งค่าระบบพื้นฐาน
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Enable Agent Mode</p>
-                  <p className="text-sm text-muted-foreground">เปิดใช้งานโหมด Agent</p>
-                </div>
-                <Button variant="outline">Toggle</Button>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Maintenance Mode</p>
-                  <p className="text-sm text-muted-foreground">ปิดระบบเพื่อบำรุงรักษา</p>
-                </div>
-                <Button variant="outline">Toggle</Button>
-              </div>
+              <h4 className="font-semibold text-gray-900">จัดการผู้ใช้</h4>
+              <p className="text-sm text-gray-600 mt-1">ดู แก้ไข และจัดการผู้ใช้</p>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </a>
+
+        <a
+          href="/admin/settings"
+          className="rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg">
+              <Activity className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900">การตั้งค่าระบบ</h4>
+              <p className="text-sm text-gray-600 mt-1">ปรับแต่งการตั้งค่า</p>
+            </div>
+          </div>
+        </a>
+
+        <a
+          href="/admin/logs"
+          className="rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg">
+              <Database className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900">Activity Logs</h4>
+              <p className="text-sm text-gray-600 mt-1">ดูประวัติการใช้งาน</p>
+            </div>
+          </div>
+        </a>
+      </div>
     </div>
-  );
+  )
 }

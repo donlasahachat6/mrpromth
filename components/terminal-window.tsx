@@ -109,7 +109,7 @@ export function TerminalWindow({
       <div className="flex items-center justify-between border-b px-3 py-2 bg-muted/50">
         <div className="flex items-center gap-2">
           <Terminal className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Mr.Prompt's Computer</span>
+          <span className="text-sm font-medium">Mr.Prompt&apos;s Computer</span>
           {currentCommand && (
             <span className="text-xs text-muted-foreground">
               • Running

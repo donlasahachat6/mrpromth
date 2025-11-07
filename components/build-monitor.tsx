@@ -30,45 +30,28 @@ export function BuildMonitor({ projectId }: BuildMonitorProps) {
   const [isBuilding, setIsBuilding] = useState(false)
 
   useEffect(() => {
-    // Simulate initial files
-    const mockFiles: BuildFile[] = [
-      {
-        id: '1',
-        name: 'page.tsx',
-        path: '/app/page.tsx',
-        type: 'page',
-        status: 'completed',
-        size: '2.4 KB',
-        createdAt: new Date(),
-      },
-      {
-        id: '2',
-        name: 'layout.tsx',
-        path: '/app/layout.tsx',
-        type: 'page',
-        status: 'completed',
-        size: '1.8 KB',
-        createdAt: new Date(),
-      },
-    ]
+    if (!projectId) return
 
-    const mockLogs: BuildLog[] = [
-      {
-        id: '1',
-        message: 'เริ่มต้นการสร้างโปรเจกต์...',
-        type: 'info',
-        timestamp: new Date(),
-      },
-      {
-        id: '2',
-        message: 'สร้างไฟล์ page.tsx สำเร็จ',
-        type: 'success',
-        timestamp: new Date(),
-      },
-    ]
+    // Fetch build files and logs from API
+    const fetchBuildData = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/build`)
+        if (response.ok) {
+          const data = await response.json()
+          setFiles(data.files || [])
+          setLogs(data.logs || [])
+          setIsBuilding(data.isBuilding || false)
+        }
+      } catch (error) {
+        console.error('Error fetching build data:', error)
+      }
+    }
 
-    setFiles(mockFiles)
-    setLogs(mockLogs)
+    fetchBuildData()
+
+    // Poll for updates every 3 seconds while building
+    const interval = setInterval(fetchBuildData, 3000)
+    return () => clearInterval(interval)
   }, [projectId])
 
   const getFileIcon = (type: BuildFile['type']) => {

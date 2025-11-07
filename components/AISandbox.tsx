@@ -42,80 +42,47 @@ export function AISandbox({ sessionId, onTaskComplete }: AISandboxProps) {
     setConnectionStatus('connecting')
 
     try {
-      // In a real implementation, this would connect to your AI gateway SSE endpoint
-      // For now, we'll simulate the connection and generate mock tasks
-      await simulateAIConnection()
-      setIsConnected(true)
-      setConnectionStatus('connected')
+      // Connect to AI gateway SSE endpoint
+      const eventSource = new EventSource(`/api/ai/stream?session=${sessionId}`)
+      
+      eventSource.onopen = () => {
+        setIsConnected(true)
+        setConnectionStatus('connected')
+      }
 
-      // Generate some mock tasks to demonstrate the interface
-      generateMockTasks()
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data)
+        handleAIMessage(data)
+      }
+
+      eventSource.onerror = () => {
+        setConnectionStatus('disconnected')
+        setIsConnected(false)
+        eventSource.close()
+      }
+
+      eventSourceRef.current = eventSource
     } catch (error) {
       console.error('Failed to connect to AI stream:', error)
       setConnectionStatus('disconnected')
     }
   }
 
-  const simulateAIConnection = (): Promise<void> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve()
-      }, 1000)
-    })
-  }
-
-  const generateMockTasks = () => {
-    const mockTasks: AITask[] = [
-      {
-        id: '1',
-        type: 'code_generation',
-        status: 'pending',
-        title: 'Generating React component',
-        description: 'Creating a new file upload component with drag & drop support',
-        progress: 0,
-        startTime: new Date()
-      },
-      {
-        id: '2',
-        type: 'file_operation',
-        status: 'pending',
-        title: 'Analyzing file structure',
-        description: 'Scanning uploaded files for code patterns and dependencies',
-        progress: 0,
-        startTime: new Date()
-      }
-    ]
-
-    setTasks(mockTasks)
-
-    // Simulate task execution
-    setTimeout(() => {
-      updateTaskProgress('1', 25, 'Analyzing requirements...')
-    }, 1000)
-
-    setTimeout(() => {
-      updateTaskProgress('1', 50, 'Generating component structure...')
-    }, 2000)
-
-    setTimeout(() => {
-      updateTaskProgress('1', 75, 'Adding event handlers and state management...')
-    }, 3000)
-
-    setTimeout(() => {
-      completeTask('1', 'Component generated successfully!', undefined)
-    }, 4000)
-
-    setTimeout(() => {
-      updateTaskProgress('2', 30, 'Scanning file hierarchy...')
-    }, 1500)
-
-    setTimeout(() => {
-      updateTaskProgress('2', 60, 'Analyzing code patterns...')
-    }, 2500)
-
-    setTimeout(() => {
-      completeTask('2', 'File analysis complete. Found 3 potential optimizations.', undefined)
-    }, 3500)
+  const handleAIMessage = (data: any) => {
+    switch (data.type) {
+      case 'task_created':
+        setTasks(prev => [...prev, data.task])
+        break
+      case 'task_progress':
+        updateTaskProgress(data.taskId, data.progress, data.output)
+        break
+      case 'task_completed':
+        completeTask(data.taskId, data.output, undefined)
+        break
+      case 'task_failed':
+        completeTask(data.taskId, undefined, data.error)
+        break
+    }
   }
 
   const updateTaskProgress = (taskId: string, progress: number, output?: string) => {
@@ -322,14 +289,6 @@ export function AISandbox({ sessionId, onTaskComplete }: AISandboxProps) {
       {/* Controls */}
       <div className="p-4 border-t border-gray-700">
         <div className="space-y-2">
-          <button
-            onClick={() => generateMockTasks()}
-            disabled={connectionStatus !== 'connected'}
-            className="w-full px-3 py-2 bg-green-900/30 hover:bg-green-900/50 border border-green-700 rounded text-sm text-green-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Test AI Tasks
-          </button>
-
           <button
             onClick={() => setTasks([])}
             className="w-full px-3 py-2 bg-red-900/30 hover:bg-red-900/50 border border-red-700 rounded text-sm text-red-300 transition-colors"
