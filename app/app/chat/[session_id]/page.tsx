@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { ChatInput } from "@/components/chat/chat-input";
-import { MessageList } from "@/components/chat/message-list";
+import { TerminalChatWrapper } from "@/components/terminal-chat-wrapper";
 import type { ChatMessage } from "@/components/chat/types";
 
 interface ChatPageProps {
@@ -153,17 +152,13 @@ export default function ChatSessionPage({ params }: ChatPageProps) {
     };
 
   return (
-    <div className="flex h-full flex-col gap-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">Session #{params.session_id}</h2>
-            <p className="text-sm text-muted-foreground">Connected to Mr.Prompt AI Gateway.</p>
-        </div>
-      </header>
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <MessageList messages={messages.filter((message) => message.role !== "system")} />
-        <ChatInput onSend={handleSend} isStreaming={isStreaming} />
-      </div>
+    <div className="flex h-full flex-col">
+      <TerminalChatWrapper
+        messages={messages.filter((message) => message.role !== "system")}
+        onSend={handleSend}
+        isStreaming={isStreaming}
+        sessionId={params.session_id}
+      />
     </div>
   );
 }

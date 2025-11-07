@@ -2,6 +2,18 @@ export default function HomePage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background text-foreground">
       <div className="text-center space-y-6 animate-fade-in">
+        <div className="flex justify-center mb-4 animate-scale-in">
+          <img
+            src="/logo-thai-light.png"
+            alt="มิสเตอร์พรอมท์"
+            className="h-32 dark:hidden"
+          />
+          <img
+            src="/logo-thai-dark.png"
+            alt="มิสเตอร์พรอมท์"
+            className="h-32 hidden dark:block"
+          />
+        </div>
         <h1 className="text-5xl font-bold animate-slide-up thai-text">
           Mr.Prompt
         </h1>
