@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { ReactNode } from "react";
 import { LogOut, PanelsTopLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +15,15 @@ const navigation = [
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.1),_transparent_45%),_linear-gradient(180deg,_rgba(16,185,129,0.08),_transparent_55%)]">
       <div className="flex min-h-screen flex-col">
@@ -48,7 +61,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <p className="text-xs text-muted-foreground">Product Lead</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="hidden gap-2 md:inline-flex">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="hidden gap-2 md:inline-flex"
+                onClick={handleLogout}
+              >
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
