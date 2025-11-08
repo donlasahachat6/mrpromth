@@ -40,8 +40,8 @@ export async function middleware(req: NextRequest) {
       .eq('id', session.user.id)
       .single();
 
-    // Check if account is active
-    if (!profile?.is_active) {
+    // Check if account is explicitly disabled (is_active === false)
+    if (profile && profile.is_active === false) {
       return NextResponse.redirect(new URL('/account-disabled', req.url));
     }
 
