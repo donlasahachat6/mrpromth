@@ -112,20 +112,19 @@ async function generateTests(
   
   for (const filePath of targetFiles) {
     try {
-      // Read the source file
-      const fullPath = join(projectPath, filePath)
-      const sourceCode = await readFile(fullPath, 'utf-8')
+      // Read the source file (filePath is already absolute)
+      const sourceCode = await readFile(filePath, 'utf-8')
       
       // Generate test using AI
       const testCode = await generateTestWithAI(sourceCode, filePath, task.testFramework || 'jest')
       
-      // Determine test file path
+      // Determine test file path (filePath is already absolute)
       const testFilePath = filePath.replace(/\.(ts|tsx|js|jsx)$/, '.test.$1')
-      const fullTestPath = join(projectPath, testFilePath)
       
       // Write test file
-      await mkdir(join(projectPath, testFilePath.split('/').slice(0, -1).join('/')), { recursive: true })
-      await writeFile(fullTestPath, testCode, 'utf-8')
+      const testDir = testFilePath.split('/').slice(0, -1).join('/')
+      await mkdir(testDir, { recursive: true })
+      await writeFile(testFilePath, testCode, 'utf-8')
       
       result.testsGenerated.push({
         path: testFilePath,
