@@ -345,6 +345,12 @@ export default function WorkflowStatusPageEnhanced({ params }: { params: { id: s
                   {isCompleted && (
                     <>
                       <button
+                        onClick={() => router.push(`/editor/${params.id}`)}
+                        className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg"
+                      >
+                        ✏️ Edit in Browser
+                      </button>
+                      <button
                         onClick={handleDownload}
                         className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg"
                       >

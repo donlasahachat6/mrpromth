@@ -26,9 +26,21 @@ export async function GET(
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
     }
 
-    // Mock file structure for now
-    // In production, this would read from the actual project files
-    const files = generateMockFileStructure(workflow.project_name);
+    // Load actual files from database
+    const { data: projectFiles, error: filesError } = await supabase
+      .from('project_files')
+      .select('file_path, content')
+      .eq('workflow_id', params.id);
+
+    if (filesError) {
+      console.error('Error loading files:', filesError);
+      // Fallback to mock if no files found
+      const files = generateMockFileStructure(workflow.project_name);
+      return NextResponse.json({ files });
+    }
+
+    // Convert flat file list to tree structure
+    const files = buildFileTree(projectFiles || []);
 
     return NextResponse.json({ files });
   } catch (error) {
@@ -38,6 +50,45 @@ export async function GET(
       { status: 500 }
     );
   }
+}
+
+function buildFileTree(files: Array<{ file_path: string; content: string }>) {
+  const root: any[] = [];
+  const map = new Map<string, any>();
+
+  // Sort files by path
+  files.sort((a, b) => a.file_path.localeCompare(b.file_path));
+
+  for (const file of files) {
+    const parts = file.file_path.split('/').filter(Boolean);
+    let currentLevel = root;
+    let currentPath = '';
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      currentPath += '/' + part;
+      const isFile = i === parts.length - 1;
+
+      let existing = currentLevel.find((n: any) => n.name === part);
+
+      if (!existing) {
+        existing = {
+          name: part,
+          path: currentPath,
+          type: isFile ? 'file' : 'folder',
+          children: isFile ? undefined : [],
+        };
+        currentLevel.push(existing);
+        map.set(currentPath, existing);
+      }
+
+      if (!isFile && existing.children) {
+        currentLevel = existing.children;
+      }
+    }
+  }
+
+  return root;
 }
 
 function generateMockFileStructure(projectName: string) {

@@ -16,11 +16,21 @@ export async function GET(
 
     const filePath = '/' + params.path.join('/');
 
-    // Mock file content for now
-    // In production, this would read from actual files
-    const content = getMockFileContent(filePath);
+    // Load file from database
+    const { data: file, error } = await supabase
+      .from('project_files')
+      .select('content')
+      .eq('workflow_id', params.id)
+      .eq('file_path', filePath)
+      .single();
 
-    return NextResponse.json({ content });
+    if (error || !file) {
+      // Fallback to mock content
+      const content = getMockFileContent(filePath);
+      return NextResponse.json({ content });
+    }
+
+    return NextResponse.json({ content: file.content });
   } catch (error) {
     console.error('Error loading file:', error);
     return NextResponse.json(
@@ -45,12 +55,25 @@ export async function PUT(
     const { content } = await request.json();
     const filePath = '/' + params.path.join('/');
 
-    // Mock save for now
-    // In production, this would save to actual files
-    console.log(`Saving file ${filePath}:`, content.substring(0, 100));
+    // Save file to database
+    const { error } = await supabase
+      .from('project_files')
+      .upsert({
+        workflow_id: params.id,
+        file_path: filePath,
+        content,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'workflow_id,file_path'
+      });
 
-    // TODO: Save to Supabase Storage or file system
-    // For now, just return success
+    if (error) {
+      console.error('Error saving file:', error);
+      return NextResponse.json(
+        { error: 'Failed to save file' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
