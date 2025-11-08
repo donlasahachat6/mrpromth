@@ -9,6 +9,7 @@ import { agent5TestingQA } from '../agents/agent5-testing-qa'
 import { agent6Deploy } from '../agents/agent6-deployment'
 import { agent7Monitor } from '../agents/agent7-monitoring'
 import { createClient } from '@supabase/supabase-js'
+import { workflowEvents } from './events'
 
 export interface WorkflowRequest {
   userId: string
@@ -77,6 +78,8 @@ export class WorkflowOrchestrator {
    * Execute the complete workflow
    */
   async execute(prompt: string, options?: WorkflowRequest['options']): Promise<WorkflowState> {
+    const startTime = Date.now()
+    
     try {
       console.log('[Workflow] Starting workflow:', this.state.id)
       
@@ -133,13 +136,38 @@ export class WorkflowOrchestrator {
       await this.updateStatus('completed', 7)
       console.log('[Workflow] ✅ Workflow completed:', this.state.id)
       
+      // Emit completion event
+      const duration = Date.now() - startTime
+      workflowEvents.emitComplete(this.state.id, {
+        success: true,
+        results: this.state.results,
+        duration
+      })
+      
       return this.state
       
     } catch (error) {
       console.error('[Workflow] ❌ Error:', error)
       this.state.status = 'failed'
-      this.state.errors.push(error instanceof Error ? error.message : String(error))
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      this.state.errors.push(errorMessage)
       await this.saveState()
+      
+      // Emit error event
+      workflowEvents.emitError(this.state.id, {
+        error: errorMessage,
+        step: this.state.currentStep,
+        recoverable: false
+      })
+      
+      // Emit completion event with failure
+      const duration = Date.now() - startTime
+      workflowEvents.emitComplete(this.state.id, {
+        success: false,
+        results: this.state.results,
+        duration
+      })
+      
       throw error
     }
   }
@@ -345,6 +373,21 @@ export class WorkflowOrchestrator {
     this.state.updatedAt = new Date().toISOString()
     
     console.log(`[Workflow] ${status} (${this.state.progress}%)`)
+    
+    // Emit progress event for real-time updates
+    workflowEvents.emitProgress(this.state.id, {
+      step,
+      totalSteps: this.state.totalSteps,
+      status,
+      message: `Step ${step}/${this.state.totalSteps}: ${status}`,
+      progress: this.state.progress
+    })
+    
+    // Emit status event
+    workflowEvents.emitStatus(this.state.id, {
+      status,
+      message: `Workflow is ${status}`
+    })
   }
   
   /**
