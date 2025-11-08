@@ -27,7 +27,7 @@ interface ChatRequestBody {
   [key: string]: unknown;
 }
 
-type ToolName = "web_search" | "code_execution";
+type ToolName = "web_search" | "code_execution" | "project_generation";
 
 interface ToolInvocation {
   name: ToolName;
@@ -65,6 +65,79 @@ interface SearchResultSummary {
 }
 
 const toolRegistry: Record<ToolName, ToolDefinition> = {
+  project_generation: {
+    description: "Generates a complete full-stack web project from a natural language description.",
+    matches(message) {
+      if (message.role !== "user") return null;
+      const content = message.content.toLowerCase();
+      
+      // Keywords สำหรับการสร้างโปรเจกต์
+      const createKeywords = [
+        'สร้าง', 'create', 'build', 'make', 'generate', 
+        'ทำ', 'เริ่ม', 'start', 'new project', 'โปรเจกต์ใหม่'
+      ];
+      
+      // Project types
+      const projectTypes = [
+        'website', 'เว็บ', 'blog', 'บล็อก', 'e-commerce', 'ร้านค้า',
+        'dashboard', 'แดชบอร์ด', 'app', 'แอป', 'api', 'todo', 'chat',
+        'project', 'โปรเจกต์'
+      ];
+      
+      const hasCreateKeyword = createKeywords.some(kw => content.includes(kw));
+      const hasProjectType = projectTypes.some(type => content.includes(type));
+      
+      if (hasCreateKeyword && hasProjectType) {
+        return message.content;
+      }
+      
+      // Check for explicit command
+      const commandMatch = content.match(/^!generate\s+(.+)/i);
+      if (commandMatch) {
+        return commandMatch[1].trim();
+      }
+      
+      return null;
+    },
+    async execute(prompt, context) {
+      // Import WorkflowOrchestrator
+      const { WorkflowOrchestrator } = await import('@/lib/workflow/orchestrator');
+      
+      // Extract project name from prompt
+      const nameMatch = prompt.match(/(?:ชื่อ|name|called?)\s+["']?([a-z0-9-]+)["']?/i);
+      const projectName = nameMatch 
+        ? nameMatch[1].toLowerCase().replace(/[^a-z0-9-]/g, '-')
+        : `project-${Date.now()}`;
+      
+      // Create orchestrator
+      const orchestrator = new WorkflowOrchestrator({
+        userId: context.userId,
+        projectName,
+        prompt,
+      });
+      
+      // Execute workflow
+      try {
+        const result = await orchestrator.execute(prompt);
+        
+        return {
+          name: "project_generation",
+          content: `✅ Project created successfully!\n\n**Project**: ${projectName}\n**Workflow ID**: ${result.id}\n**Status**: ${result.status}\n\nYou can view the progress at /generate/${result.id}`,
+          metadata: {
+            projectName,
+            workflowId: result.id,
+            status: result.status,
+          },
+          modelMessage: {
+            role: "system",
+            content: `Project generation completed. Workflow ID: ${result.id}`,
+          },
+        };
+      } catch (error) {
+        throw new Error(`Project generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    },
+  },
   web_search: {
     description: "Searches the public web for up-to-date information.",
     matches(message) {
