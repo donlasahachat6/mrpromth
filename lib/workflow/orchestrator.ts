@@ -10,6 +10,7 @@ import { agent6Deploy } from '../agents/agent6-deployment'
 import { agent7Monitor } from '../agents/agent7-monitoring'
 import { createClient } from '@supabase/supabase-js'
 import { workflowEvents } from './events'
+import { ProjectManager } from '../file-manager/project-manager'
 
 export interface WorkflowRequest {
   userId: string
@@ -39,6 +40,12 @@ export interface WorkflowState {
     testing?: any
     deployment?: any
     monitoring?: any
+    package?: {
+      zipPath: string
+      downloadUrl: string
+      size: number
+      fileCount: number
+    }
   }
   errors: string[]
   createdAt: string
@@ -51,8 +58,10 @@ export interface WorkflowState {
 export class WorkflowOrchestrator {
   private state: WorkflowState
   private supabase: ReturnType<typeof createClient>
+  private projectManager: ProjectManager
   
   constructor(request: WorkflowRequest) {
+    this.projectManager = new ProjectManager()
     this.state = {
       id: this.generateId(),
       userId: request.userId,
@@ -130,6 +139,12 @@ export class WorkflowOrchestrator {
       await this.updateStatus('monitoring', 7)
       const monitoring = await this.setupMonitoring()
       this.state.results.monitoring = monitoring
+      await this.saveState()
+      
+      // Step 8: Package project
+      console.log('[Workflow] Packaging project...')
+      const packageResult = await this.packageProject()
+      this.state.results.package = packageResult
       await this.saveState()
       
       // Complete
@@ -361,6 +376,47 @@ export class WorkflowOrchestrator {
         type: 'health-check'
       }
     })
+  }
+  
+  /**
+   * Package project files
+   */
+  private async packageProject(): Promise<any> {
+    console.log('[Workflow] Packaging project files...')
+    
+    // Collect all generated files
+    const allFiles = [
+      ...(this.state.results.backend?.filesGenerated || []),
+      ...(this.state.results.frontend?.filesGenerated || []),
+      ...(this.state.results.testing?.testsGenerated || [])
+    ]
+    
+    // Create project structure
+    const projectPath = await this.projectManager.createProjectStructure({
+      projectId: this.state.id,
+      projectName: this.state.projectName,
+      userId: this.state.userId,
+      files: allFiles,
+      dependencies: [
+        ...(this.state.results.backend?.dependencies || []),
+        ...(this.state.results.frontend?.dependencies || [])
+      ]
+    })
+    
+    // Package as ZIP
+    const pkg = await this.projectManager.packageProject(projectPath, this.state.id)
+    
+    // Upload to Supabase Storage
+    const downloadUrl = await this.projectManager.uploadToStorage(pkg, this.state.userId)
+    
+    console.log('[Workflow] ✅ Project packaged and uploaded')
+    
+    return {
+      zipPath: pkg.zipPath,
+      downloadUrl,
+      size: pkg.size,
+      fileCount: pkg.fileCount
+    }
   }
   
   /**
