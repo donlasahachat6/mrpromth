@@ -4,10 +4,6 @@
  */
 
 import axios, { AxiosInstance } from 'axios'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
-import { createReadStream } from 'fs'
-import FormData from 'form-data'
 
 export interface VercelDeploymentOptions {
   projectName: string

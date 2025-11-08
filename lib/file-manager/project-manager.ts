@@ -3,7 +3,7 @@
  * Handles project directory creation, file writing, and packaging
  */
 
-import { mkdir, writeFile, readdir, stat, rm } from 'fs/promises'
+import { mkdir, writeFile, readdir, stat, rm, readFile as readFileAsync } from 'fs/promises'
 import { join, dirname, relative } from 'path'
 import { exec } from 'child_process'
 import { promisify } from 'util'
@@ -371,8 +371,7 @@ next-env.d.ts
     const fileName = `${userId}/${pkg.projectId}.zip`
     
     // Read ZIP file
-    const fs = require('fs')
-    const zipBuffer = fs.readFileSync(pkg.zipPath)
+    const zipBuffer = await readFileAsync(pkg.zipPath)
     
     // Upload to Supabase Storage
     const { data, error } = await this.supabase.storage
