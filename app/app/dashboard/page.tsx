@@ -180,21 +180,31 @@ export default function DashboardPage() {
   const fetchProject = useCallback(async () => {
     if (!projectId) return;
 
-    const response = await fetch(`/api/projects/${projectId}`);
-    if (!response.ok) {
-      if (response.status === 404) {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          stopPolling();
+          setErrorMessage('ไม่พบโปรเจกต์ที่ระบุ');
+        } else if (response.status === 401) {
+          stopPolling();
+          setErrorMessage('กรุณาเข้าสู่ระบบอีกครั้ง');
+        }
+        return;
+      }
+
+      const data: { project: ProjectRecord; logs: AgentLogRecord[] } = await response.json();
+      setProject(data.project);
+      setLogs(data.logs ?? []);
+
+      if (data.project.status === 'completed' || data.project.status === 'error') {
         stopPolling();
       }
-      throw new Error('Failed to fetch project status');
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      // Don't stop polling on network errors, just log them
     }
 
-    const data: { project: ProjectRecord; logs: AgentLogRecord[] } = await response.json();
-    setProject(data.project);
-    setLogs(data.logs ?? []);
-
-    if (data.project.status === 'completed' || data.project.status === 'error') {
-      stopPolling();
-    }
   }, [projectId, stopPolling]);
 
   useEffect(() => {
@@ -236,16 +246,30 @@ export default function DashboardPage() {
           body: JSON.stringify({ prompt }),
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.error || 'Failed to start agent chain');
+          const data = await response.json();
+          if (response.status === 401) {
+            throw new Error('กรุณาเข้าสู่ระบบก่อนสร้างโปรเจกต์');
+          }
+          if (response.status === 403) {
+            throw new Error('คุณไม่มีสิทธิ์ในการสร้างโปรเจกต์');
+          }
+          if (response.status === 429) {
+            throw new Error('คุณสร้างโปรเจกต์บ่อยเกินไป กรุณารอสักครู่');
+          }
+          throw new Error(data.error || 'เกิดข้อผิดพลาดในการสร้างโปรเจกต์ กรุณาลองใหม่อีกครั้ง');
         }
+
+        const data = await response.json();
 
         setProjectId(data.project_id as string);
       } catch (error) {
         console.error(error);
-        setErrorMessage(error instanceof Error ? error.message : 'ไม่สามารถเริ่มกระบวนการได้');
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          setErrorMessage('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+        } else {
+          setErrorMessage(error instanceof Error ? error.message : 'ไม่สามารถเริ่มกระบวนการได้ กรุณาลองใหม่อีกครั้ง');
+        }
       } finally {
         setIsSubmitting(false);
       }
