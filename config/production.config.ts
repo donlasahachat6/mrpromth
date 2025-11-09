@@ -9,7 +9,7 @@ export const PRODUCTION_CONFIG = {
     name: 'Mr.Prompt',
     version: '1.0.0',
     environment: 'production',
-    url: 'https://mrphomth.vercel.app',
+    url: process.env.NEXT_PUBLIC_APP_URL || 'https://mrpromth-azure.vercel.app',
     supportedLanguages: ['th', 'en'],
     defaultLanguage: 'th'
   },
@@ -111,7 +111,7 @@ export const PRODUCTION_CONFIG = {
     cors: {
       enabled: true,
       origins: [
-        'https://mrphomth.vercel.app',
+        process.env.NEXT_PUBLIC_APP_URL || 'https://mrpromth-azure.vercel.app',
         'https://*.vercel.app'
       ],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
@@ -144,7 +144,7 @@ export const PRODUCTION_CONFIG = {
         'style-src': ["'self'", "'unsafe-inline'"],
         'img-src': ["'self'", 'data:', 'https:'],
         'font-src': ["'self'", 'data:'],
-        'connect-src': ["'self'", 'https://xcwkwdoxrbzzpwmlqswr.supabase.co']
+        'connect-src': ["'self'", process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://liywmjxhllpexzrnuhlu.supabase.co']
       }
     }
   },
@@ -216,7 +216,7 @@ export const PRODUCTION_CONFIG = {
     enabled: true,
     siteName: 'Mr.Prompt',
     siteDescription: 'AI-Powered Web Application Generator',
-    siteUrl: 'https://mrphomth.vercel.app',
+    siteUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://mrpromth-azure.vercel.app',
     ogImage: '/og-image.png',
     twitterHandle: '@mrprompt'
   },

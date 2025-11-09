@@ -11,7 +11,7 @@ const nextConfig = {
   // Image Optimization
   images: {
     domains: [
-      'xcwkwdoxrbzzpwmlqswr.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '') || 'liywmjxhllpexzrnuhlu.supabase.co',
       'avatars.githubusercontent.com',
       'lh3.googleusercontent.com'
     ],
@@ -138,7 +138,7 @@ const nextConfig = {
     NEXT_PUBLIC_APP_VERSION: '1.0.0',
     NEXT_PUBLIC_APP_URL: process.env.VERCEL_URL 
       ? `https://${process.env.VERCEL_URL}` 
-      : 'https://mrphomth.vercel.app'
+      : process.env.NEXT_PUBLIC_APP_URL || 'https://mrpromth-azure.vercel.app'
   },
 
   // Experimental Features
