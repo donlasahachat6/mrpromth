@@ -114,7 +114,7 @@ export class AutoKeyCache<T = any> extends MemoryCache<T> {
   /**
    * Generate cache key from function arguments
    */
-  private generateKey(fn: Function, args: any[]): string {
+  private generateKey(fn: (...args: any[]) => any, args: any[]): string {
     const fnName = fn.name || 'anonymous'
     const argsKey = JSON.stringify(args)
     return `${fnName}:${argsKey}`
