@@ -53,14 +53,14 @@ export default function LandingPage() {
           </nav>
           
           <div className="flex items-center gap-3">
-            <Link href="/login">
+            <Link href="/auth/login">
               <Button variant="ghost" size="sm" className="transition-smooth hover:scale-105">
                 เข้าสู่ระบบ
               </Button>
             </Link>
-            <Link href="/generate">
+            <Link href="/chat">
               <Button size="sm" className="btn-primary gap-2">
-                เริ่มสร้าง
+                💬 แชท AI
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -93,9 +93,9 @@ export default function LandingPage() {
             
             {/* Subheading */}
             <p className="mx-auto mb-12 max-w-3xl text-lg md:text-xl text-muted-foreground leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              แค่บอกว่าคุณต้องการเว็บไซต์แบบไหน AI Agents 7 ตัวจะร่วมมือกันสร้างให้คุณ
+              แค่บอกว่าคุณต้องการอะไร AI Agent ที่ขับเคลื่อนด้วย 19 AI Models จะสร้างให้คุณ
               <br />
-              <span className="font-semibold text-foreground">ไม่ต้องเขียนโค้ด ไม่ต้องมีพื้นฐาน ไม่ต้องรอนาน</span>
+              <span className="font-semibold text-foreground">ไม่ต้องเขียนโค้ด ไม่ต้องมีพื้นฐาน ทำงานได้ทุกอย่าง</span>
             </p>
             
             {/* CTA Buttons */}

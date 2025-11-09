@@ -193,13 +193,56 @@ export class WorkflowOrchestrator {
   private async analyzePrompt(prompt: string): Promise<any> {
     console.log('[Workflow] Analyzing prompt...')
     
-    // Simple analysis for now
-    // TODO: Integrate with Agent 1
+    // Emit progress
+    workflowEvents.emitProgress(this.state.id, {
+      step: 1,
+      total: this.state.totalSteps,
+      message: 'Analyzing your requirements with AI...'
+    })
+    
+    // Use Vanchin AI to analyze
+    const { vanchinChatCompletion } = await import('../ai/vanchin-client')
+    
+    const analysisPrompt = `Analyze this project request and provide a structured analysis:
+
+Project Request: ${prompt}
+
+Provide:
+1. Project type (e.g., web app, mobile app, API)
+2. Key features needed
+3. Complexity level (simple/medium/complex)
+4. Estimated development time
+5. Recommended tech stack
+
+Respond in JSON format.`
+
+    const response = await vanchinChatCompletion(
+      [{ role: 'user', content: analysisPrompt }],
+      {
+        temperature: 0.3,
+        maxTokens: 1000
+      }
+    )
+    
+    console.log('[Workflow] AI Analysis:', response)
+    
+    // Parse AI response or use fallback
+    try {
+      const jsonMatch = response.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0])
+      }
+    } catch (e) {
+      console.warn('[Workflow] Failed to parse AI response, using fallback')
+    }
+    
+    // Fallback analysis
     return {
       type: this.detectProjectType(prompt),
       features: this.extractFeatures(prompt),
       complexity: this.estimateComplexity(prompt),
-      estimatedTime: '10-15 minutes'
+      estimatedTime: '10-15 minutes',
+      aiAnalysis: response
     }
   }
   
@@ -209,25 +252,69 @@ export class WorkflowOrchestrator {
   private async expandPrompt(analysis: any): Promise<any> {
     console.log('[Workflow] Expanding prompt...')
     
-    // TODO: Integrate with Agent 2
+    // Emit progress
+    workflowEvents.emitProgress(this.state.id, {
+      step: 2,
+      total: this.state.totalSteps,
+      message: 'Creating detailed specifications...'
+    })
+    
+    // Use Vanchin AI to expand
+    const { vanchinChatCompletion } = await import('../ai/vanchin-client')
+    
+    const expansionPrompt = `Based on this analysis, create detailed technical specifications:
+
+Analysis: ${JSON.stringify(analysis, null, 2)}
+Project: ${this.state.projectName}
+
+Provide detailed specs for:
+1. Backend (API endpoints, database schema, authentication)
+2. Frontend (pages, components, styling)
+3. File structure
+4. Dependencies
+
+Respond in JSON format.`
+
+    const response = await vanchinChatCompletion(
+      [{ role: 'user', content: expansionPrompt }],
+      {
+        temperature: 0.4,
+        maxTokens: 2000
+      }
+    )
+    
+    console.log('[Workflow] AI Expansion:', response)
+    
+    // Parse AI response or use fallback
+    try {
+      const jsonMatch = response.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0])
+      }
+    } catch (e) {
+      console.warn('[Workflow] Failed to parse AI response, using fallback')
+    }
+    
+    // Fallback expansion
     return {
       backend: {
         description: 'Create REST API with CRUD operations',
-        endpoints: ['users', 'posts', 'comments'],
+        endpoints: ['items'],
         database: {
-          tables: ['users', 'posts', 'comments'],
-          relationships: ['posts.user_id -> users.id', 'comments.post_id -> posts.id']
+          tables: ['items'],
+          relationships: []
         },
-        authentication: true,
-        rateLimit: true
+        authentication: false,
+        rateLimit: false
       },
       frontend: {
         description: 'Create responsive web application',
-        pages: ['home', 'dashboard', 'profile'],
-        components: ['navbar', 'sidebar', 'card'],
+        pages: ['home'],
+        components: ['list', 'form'],
         styling: 'tailwind',
         responsive: true
-      }
+      },
+      aiExpansion: response
     }
   }
   
