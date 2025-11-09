@@ -332,6 +332,74 @@ next-env.d.ts
   }
   
   /**
+   * Save project files to database
+   */
+  async saveFilesToDatabase(projectPath: string, workflowId: string): Promise<void> {
+    console.log('[ProjectManager] Saving files to database for workflow:', workflowId)
+    
+    try {
+      const files = await this.getAllFiles(projectPath)
+      
+      // Save each file to database
+      for (const file of files) {
+        const relativePath = relative(projectPath, file.fullPath)
+        const content = await readFileAsync(file.fullPath, 'utf-8')
+        
+        const { error } = await this.supabase
+          .from('project_files')
+          .upsert({
+            workflow_id: workflowId,
+            file_path: relativePath,
+            content: content
+          }, {
+            onConflict: 'workflow_id,file_path'
+          })
+        
+        if (error) {
+          console.error('[ProjectManager] Error saving file:', relativePath, error)
+        } else {
+          console.log('[ProjectManager] ✅ Saved:', relativePath)
+        }
+      }
+      
+      console.log('[ProjectManager] ✅ All files saved to database')
+    } catch (error) {
+      console.error('[ProjectManager] Error saving files to database:', error)
+      throw error
+    }
+  }
+  
+  /**
+   * Get all files in directory recursively
+   */
+  private async getAllFiles(dir: string): Promise<Array<{ fullPath: string; relativePath: string }>> {
+    const files: Array<{ fullPath: string; relativePath: string }> = []
+    
+    const items = await readdir(dir, { withFileTypes: true })
+    
+    for (const item of items) {
+      // Skip node_modules, .next, and other build directories
+      if (['node_modules', '.next', '.git', 'dist', 'build'].includes(item.name)) {
+        continue
+      }
+      
+      const fullPath = join(dir, item.name)
+      
+      if (item.isDirectory()) {
+        const subFiles = await this.getAllFiles(fullPath)
+        files.push(...subFiles)
+      } else {
+        files.push({
+          fullPath,
+          relativePath: relative(dir, fullPath)
+        })
+      }
+    }
+    
+    return files
+  }
+  
+  /**
    * Package project as ZIP
    */
   async packageProject(projectPath: string, projectId: string): Promise<ProjectPackage> {
@@ -352,6 +420,14 @@ next-env.d.ts
     console.log('[ProjectManager] ✅ Project packaged:', zipPath)
     console.log('[ProjectManager] Size:', (zipStats.size / 1024 / 1024).toFixed(2), 'MB')
     console.log('[ProjectManager] Files:', fileCount)
+    
+    // NEW: Save files to database
+    try {
+      await this.saveFilesToDatabase(projectPath, projectId)
+    } catch (error) {
+      console.error('[ProjectManager] Warning: Failed to save files to database:', error)
+      // Don't throw - packaging should continue even if DB save fails
+    }
     
     return {
       projectId,

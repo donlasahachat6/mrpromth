@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import vm from "node:vm";
 import { inspect } from "node:util";
+import { getChatContext, buildContextPrompt } from "@/lib/chat/context-manager";
 
 export const runtime = "nodejs";
 
@@ -600,6 +601,22 @@ export async function POST(request: NextRequest) {
   const provider = normalizeProvider(body.provider);
   const wantStream = body.stream !== false;
 
+  // NEW: Get chat context for context-aware responses
+  let contextPrompt = "";
+  if (body.session_id) {
+    try {
+      const context = await getChatContext(user.id, body.session_id);
+      contextPrompt = buildContextPrompt(context);
+      console.log('[Chat API] Context loaded:', {
+        activeProject: context.activeProjectName,
+        historyLength: context.conversationHistory.length
+      });
+    } catch (error) {
+      console.error('[Chat API] Failed to load context:', error);
+      // Continue without context
+    }
+  }
+
   const explicitTool = detectExplicitTool(body.tool ?? null);
   const toolInvocation = explicitTool ?? detectToolInvocation(messages);
 
@@ -639,7 +656,9 @@ export async function POST(request: NextRequest) {
       ...body,
       provider,
       stream: false,
-      messages: augmentedMessages,
+      messages: contextPrompt 
+        ? [{ role: "system", content: contextPrompt }, ...augmentedMessages]
+        : augmentedMessages,
     }),
   });
 
