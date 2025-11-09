@@ -3,6 +3,8 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { getWorkflowStatus, cancelWorkflow } from '@/lib/workflow/orchestrator'
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/workflow/[id]
  * Get workflow status

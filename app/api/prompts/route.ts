@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 
 const promptInputSchema = z.object({
   title: z.string().min(1),

@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { GitHubIntegration } from '@/lib/github-integration';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/github/import - Import files from GitHub repository
 export async function POST(request: Request) {
   try {

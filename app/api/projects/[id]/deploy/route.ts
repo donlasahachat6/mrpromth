@@ -11,6 +11,8 @@ import { createVercelClient } from '@/lib/integrations/vercel-client'
 import { mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }

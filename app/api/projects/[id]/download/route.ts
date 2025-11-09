@@ -11,6 +11,8 @@ import { join } from 'path'
 import { mkdir } from 'fs/promises'
 import { createReadStream } from 'fs'
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }

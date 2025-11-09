@@ -5,6 +5,8 @@ import vm from "node:vm";
 import { inspect } from "node:util";
 import { getChatContext, buildContextPrompt } from "@/lib/chat/context-manager";
 
+export const dynamic = 'force-dynamic';
+
 export const runtime = "nodejs";
 
 const encoder = new TextEncoder();

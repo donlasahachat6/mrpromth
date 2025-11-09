@@ -5,6 +5,8 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { AgentChainOrchestrator } from "@/lib/agents/orchestrator";
 import { createServiceRoleSupabaseClient } from "@/lib/database";
 
+export const dynamic = 'force-dynamic';
+
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {

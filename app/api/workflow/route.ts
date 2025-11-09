@@ -3,6 +3,8 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { WorkflowOrchestrator } from '@/lib/workflow/orchestrator'
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/workflow
  * Start a new workflow

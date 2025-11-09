@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from 'next/headers';
 import { createChatSession, getChatSessions, saveMessage, getMessages } from '@/lib/database';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   const supabase = createServerComponentClient({ cookies });
   const { data: { user } } = await supabase.auth.getUser();

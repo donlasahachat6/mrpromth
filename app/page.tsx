@@ -44,8 +44,8 @@ export default function LandingPage() {
             <Link href="#how-it-works" className="text-sm font-medium hover:text-primary transition-smooth">
               How it Works
             </Link>
-            <Link href="#agents" className="text-sm font-medium hover:text-primary transition-smooth">
-              AI Agents
+            <Link href="#capabilities" className="text-sm font-medium hover:text-primary transition-smooth">
+              Capabilities
             </Link>
             <Link href="/docs" className="text-sm font-medium hover:text-primary transition-smooth">
               Docs
@@ -60,7 +60,7 @@ export default function LandingPage() {
             </Link>
             <Link href="/chat">
               <Button size="sm" className="btn-primary gap-2">
-                💬 แชท AI
+                💬 เริ่มใช้งาน
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -85,17 +85,17 @@ export default function LandingPage() {
             
             {/* Main Heading */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 animate-slide-up">
-              สร้างเว็บไซต์ด้วย{' '}
-              <span className="text-gradient">AI Agent</span>
+              AI Assistant ที่ทำได้{' '}
+              <span className="text-gradient">ทุกอย่าง</span>
               <br />
-              ภายในไม่กี่นาที
+              สำหรับคุณ
             </h1>
             
             {/* Subheading */}
             <p className="mx-auto mb-12 max-w-3xl text-lg md:text-xl text-muted-foreground leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              แค่บอกว่าคุณต้องการอะไร AI Agent ที่ขับเคลื่อนด้วย 19 AI Models จะสร้างให้คุณ
+              แชท วิเคราะห์ข้อมูล สร้างเว็บไซต์ พัฒนา API เขียนโค้ด และอื่นๆ อีกมากมาย
               <br />
-              <span className="font-semibold text-foreground">ไม่ต้องเขียนโค้ด ไม่ต้องมีพื้นฐาน ทำงานได้ทุกอย่าง</span>
+              <span className="font-semibold text-foreground">ระบบ AI ที่ทรงพลังที่สุด ขับเคลื่อนด้วย 19 AI Models</span>
             </p>
             
             {/* CTA Buttons */}
@@ -141,7 +141,7 @@ export default function LandingPage() {
               ทำไมต้อง <span className="text-gradient">MR.Promth</span>?
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              AI Agent Platform ที่ทรงพลังที่สุด สร้างเว็บไซต์ Full-Stack ได้จริง
+              AI Platform ที่ทรงพลังที่สุด รองรับทุกการทำงาน แชท สร้าง วิเคราะห์ และอื่นๆ
             </p>
           </div>
           
@@ -151,9 +151,9 @@ export default function LandingPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary mb-4 group-hover:scale-110 transition-smooth">
                 <Bot className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">7 AI Agents ทำงานร่วมกัน</h3>
+              <h3 className="text-xl font-semibold mb-2">แชท AI อัจฉริยะ</h3>
               <p className="text-muted-foreground">
-                ระบบ AI Agents 7 ตัวที่เชี่ยวชาญเฉพาะด้าน ทำงานร่วมกันสร้างเว็บไซต์ให้คุณ
+                สนทนากับ AI ได้แบบธรรมชาติ ตอบคำถาม ขอคำแนะนำ และทำงานต่างๆ ได้
               </p>
             </div>
 
@@ -162,9 +162,9 @@ export default function LandingPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-primary mb-4 group-hover:scale-110 transition-smooth">
                 <Zap className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">สร้างเร็วภายในไม่กี่นาที</h3>
+              <h3 className="text-xl font-semibold mb-2">สร้างเว็บไซต์ & API</h3>
               <p className="text-muted-foreground">
-                จากที่เคยต้องใช้เวลาหลายวัน ตอนนี้สร้างเว็บไซต์เสร็จภายใน 5-10 นาที
+                สร้างเว็บไซต์ Full-Stack และ API ได้ภายในไม่กี่นาที พร้อม Deploy
               </p>
             </div>
 
@@ -173,9 +173,9 @@ export default function LandingPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-secondary to-accent mb-4 group-hover:scale-110 transition-smooth">
                 <Code className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">โค้ดคุณภาพสูง Production-Ready</h3>
+              <h3 className="text-xl font-semibold mb-2">วิเคราะห์ข้อมูล</h3>
               <p className="text-muted-foreground">
-                โค้ดที่ AI สร้างให้มีคุณภาพสูง ใช้ Best Practices และพร้อมใช้งานจริง
+                วิเคราะห์ข้อมูล สร้างกราฟ และรายงาน จากข้อมูลของคุณ
               </p>
             </div>
 
@@ -184,9 +184,9 @@ export default function LandingPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-success to-primary mb-4 group-hover:scale-110 transition-smooth">
                 <Layers className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Full-Stack Complete</h3>
+              <h3 className="text-xl font-semibold mb-2">เขียนโค้ด</h3>
               <p className="text-muted-foreground">
-                ครบทั้ง Frontend, Backend, Database, Authentication และ Deployment
+                ช่วยเขียนโค้ดทุกภาษา อธิบาย Debug และปรับปรุงโค้ดของคุณ
               </p>
             </div>
 
@@ -195,9 +195,9 @@ export default function LandingPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-warning to-secondary mb-4 group-hover:scale-110 transition-smooth">
                 <Github className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">Auto Deploy to Vercel</h3>
+              <h3 className="text-xl font-semibold mb-2">รองรับหลายไฟล์</h3>
               <p className="text-muted-foreground">
-                สร้างเสร็จแล้ว Deploy ขึ้น Vercel อัตโนมัติ พร้อม GitHub Repository
+                อัพโหลด แปลง และวิเคราะห์ไฟล์ต่างๆ (PDF, Images, CSV, และอื่นๆ)
               </p>
             </div>
 

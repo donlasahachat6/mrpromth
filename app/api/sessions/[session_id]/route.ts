@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from 'next/headers';
 import { getChatSessions, updateUserProfile } from '@/lib/database';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { session_id: string } }

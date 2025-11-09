@@ -3,6 +3,8 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import { encryptSecret, hashIdentifier, maskSecret } from '@/utils/security';
 
+export const dynamic = 'force-dynamic';
+
 const ALLOWED_PROVIDERS = ['openai', 'anthropic'] as const;
 type ProviderValue = (typeof ALLOWED_PROVIDERS)[number];
 
