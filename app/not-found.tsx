@@ -38,8 +38,8 @@ export default function NotFound() {
               Dashboard
             </Link>
             <span className="text-gray-300">|</span>
-            <Link href="/agents" className="text-blue-600 hover:underline">
-              AI Agents
+            <Link href="/examples" className="text-blue-600 hover:underline">
+              Examples
             </Link>
           </div>
         </div>
