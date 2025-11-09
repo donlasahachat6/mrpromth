@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { createGitHubClient } from '@/lib/integrations/github-client'
 import { createVercelClient } from '@/lib/integrations/vercel-client'
 import { mkdir, writeFile } from 'fs/promises'
@@ -42,7 +43,7 @@ export async function POST(
     }
     
     // Get user from session
-    const supabase = await createClient()
+    const supabase = createRouteHandlerClient({ cookies })
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {

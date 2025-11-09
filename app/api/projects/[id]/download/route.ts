@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { createProjectZip, uploadZipToStorage } from '@/lib/utils/zip-generator'
 import { join } from 'path'
 import { mkdir } from 'fs/promises'
@@ -18,7 +19,7 @@ export async function GET(
     const projectId = params.id
     
     // Get user from session
-    const supabase = await createClient()
+    const supabase = createRouteHandlerClient({ cookies })
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -68,7 +69,7 @@ export async function GET(
     await mkdir(tempDir, { recursive: true })
     
     // Write files to temp directory
-    const fs = require('fs/promises')
+    const { writeFile: writeFileAsync, mkdir: mkdirAsync } = await import('fs/promises')
     for (const file of files) {
       const filePath = join(tempDir, file.file_path)
       const fileDir = filePath.substring(0, filePath.lastIndexOf('/'))
@@ -77,7 +78,7 @@ export async function GET(
       await mkdir(fileDir, { recursive: true })
       
       // Write file content
-      await fs.writeFile(filePath, file.content || '', 'utf-8')
+      await writeFileAsync(filePath, file.content || '', 'utf-8')
     }
     
     // Create ZIP file
@@ -142,7 +143,7 @@ export async function POST(
     const projectId = params.id
     
     // Get user from session
-    const supabase = await createClient()
+    const supabase = createRouteHandlerClient({ cookies })
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
@@ -184,12 +185,12 @@ export async function POST(
     const tempDir = join('/tmp', 'projects', projectId)
     await mkdir(tempDir, { recursive: true })
     
-    const fs = require('fs/promises')
+    const { writeFile: writeFileAsync, mkdir: mkdirAsync } = await import('fs/promises')
     for (const file of files) {
       const filePath = join(tempDir, file.file_path)
       const fileDir = filePath.substring(0, filePath.lastIndexOf('/'))
       await mkdir(fileDir, { recursive: true })
-      await fs.writeFile(filePath, file.content || '', 'utf-8')
+      await writeFileAsync(filePath, file.content || '', 'utf-8')
     }
     
     // Create ZIP
