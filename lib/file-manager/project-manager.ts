@@ -8,6 +8,7 @@ import { join, dirname, relative } from 'path'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../database.types'
 
 const execAsync = promisify(exec)
 
@@ -38,11 +39,11 @@ export interface ProjectPackage {
  * Project Manager Class
  */
 export class ProjectManager {
-  private supabase: ReturnType<typeof createClient>
+  private supabase: ReturnType<typeof createClient<Database>>
   private baseProjectPath: string
   
   constructor() {
-    this.supabase = createClient(
+    this.supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
@@ -345,7 +346,7 @@ next-env.d.ts
         const relativePath = relative(projectPath, file.fullPath)
         const content = await readFileAsync(file.fullPath, 'utf-8')
         
-        const { error } = await this.supabase
+        const { error } = await (this.supabase as any)
           .from('project_files')
           .upsert({
             workflow_id: workflowId,
