@@ -218,13 +218,24 @@ Provide:
 
 Respond in JSON format.`
 
-    const response = await vanchinChatCompletion(
+    const completion = await vanchinChatCompletion(
       [{ role: 'user', content: analysisPrompt }],
       {
         temperature: 0.3,
         maxTokens: 1000
       }
     )
+    
+    // Extract text from completion
+    let response = ''
+    if (typeof completion === 'string') {
+      response = completion
+    } else if ('choices' in completion && completion.choices) {
+      response = completion.choices[0]?.message?.content || ''
+    } else {
+      // Handle stream or other types
+      response = String(completion)
+    }
     
     console.log('[Workflow] AI Analysis:', response)
     
@@ -279,7 +290,7 @@ Provide detailed specs for:
 
 Respond in JSON format.`
 
-    const response = await vanchinChatCompletion(
+    const completion2 = await vanchinChatCompletion(
       [{ role: 'user', content: expansionPrompt }],
       {
         temperature: 0.4,
@@ -287,11 +298,21 @@ Respond in JSON format.`
       }
     )
     
-    console.log('[Workflow] AI Expansion:', response)
+    // Extract text from completion
+    let response2 = ''
+    if (typeof completion2 === 'string') {
+      response2 = completion2
+    } else if ('choices' in completion2 && completion2.choices) {
+      response2 = completion2.choices[0]?.message?.content || ''
+    } else {
+      response2 = String(completion2)
+    }
+    
+    console.log('[Workflow] AI Expansion:', response2)
     
     // Parse AI response or use fallback
     try {
-      const jsonMatch = response.match(/\{[\s\S]*\}/)
+      const jsonMatch = response2.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0])
       }
@@ -318,7 +339,7 @@ Respond in JSON format.`
         styling: 'tailwind',
         responsive: true
       },
-      aiExpansion: response
+      aiExpansion: response2
     }
   }
   
