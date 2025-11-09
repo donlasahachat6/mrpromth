@@ -196,8 +196,10 @@ export class WorkflowOrchestrator {
     // Emit progress
     workflowEvents.emitProgress(this.state.id, {
       step: 1,
-      total: this.state.totalSteps,
-      message: 'Analyzing your requirements with AI...'
+      totalSteps: this.state.totalSteps,
+      status: 'analyzing',
+      message: 'Analyzing your requirements with AI...',
+      progress: Math.round((1 / this.state.totalSteps) * 100)
     })
     
     // Use Vanchin AI to analyze
@@ -255,8 +257,10 @@ Respond in JSON format.`
     // Emit progress
     workflowEvents.emitProgress(this.state.id, {
       step: 2,
-      total: this.state.totalSteps,
-      message: 'Creating detailed specifications...'
+      totalSteps: this.state.totalSteps,
+      status: 'expanding',
+      message: 'Creating detailed specifications...',
+      progress: Math.round((2 / this.state.totalSteps) * 100)
     })
     
     // Use Vanchin AI to expand
