@@ -7,7 +7,7 @@ import { RateLimiters } from '@/lib/utils/rate-limiter';
 export const dynamic = 'force-dynamic';
 
 // POST /api/files/upload - Upload file for chat
-async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest, context: any) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     
@@ -119,4 +119,4 @@ async function handlePOST(request: NextRequest) {
 }
 
 // Apply rate limiting: 30 requests per minute for file uploads
-export const POST = withRateLimit(RateLimiters.standard)(handlePOST);
+export const POST = withRateLimit(handlePOST, RateLimiters.standard);

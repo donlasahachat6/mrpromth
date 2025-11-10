@@ -119,9 +119,9 @@ function logToConsole(error: AppError | Error) {
 async function sendToMonitoring(error: AppError | Error) {
   // Use centralized error monitoring
   if (error instanceof AppError) {
-    captureError(error, error.context, error.severity as any)
+    captureError(error, { ...error.context, severity: error.severity })
   } else {
-    captureError(error, {}, 'medium')
+    captureError(error, { severity: 'medium' })
   }
 }
 

@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export const runtime = "nodejs";
 
-async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest, context: any) {
   const supabase = createRouteHandlerClient({ cookies });
 
   const {
@@ -56,7 +56,7 @@ async function handlePOST(request: NextRequest) {
 }
 
 // Apply rate limiting: 20 requests per minute for agent chain execution
-export const POST = withRateLimit(RateLimiters.ai)(handlePOST);
+export const POST = withRateLimit(handlePOST, RateLimiters.ai);
 
 async function runAgentChainInBackground({
   projectId,

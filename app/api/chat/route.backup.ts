@@ -590,7 +590,7 @@ function buildStreamResponse(events: Record<string, unknown>[]) {
   );
 }
 
-async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest, context: any) {
   const supabase = createRouteHandlerClient({ cookies });
   const {
     data: { user },
@@ -715,4 +715,4 @@ async function handlePOST(request: NextRequest) {
 }
 
 // Apply rate limiting: 20 requests per minute for AI chat
-export const POST = withRateLimit(RateLimiters.ai)(handlePOST);
+export const POST = withRateLimit(handlePOST, RateLimiters.ai);

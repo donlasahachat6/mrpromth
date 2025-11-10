@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/workflow
  * Start a new workflow
  */
-async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest, context: any) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -70,4 +70,4 @@ async function handlePOST(request: NextRequest) {
 }
 
 // Apply rate limiting: 5 workflows per hour
-export const POST = withRateLimit(RateLimiters.projectGeneration)(handlePOST);
+export const POST = withRateLimit(handlePOST, RateLimiters.projectGeneration);

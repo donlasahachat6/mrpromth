@@ -1,7 +1,7 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { VM } from "vm2";
+// Removed vm2 dependency - using Function constructor instead
 
 export const dynamic = "force-dynamic";
 
@@ -69,8 +69,12 @@ For full terminal access, use the system terminal.`;
         case 'calc':
           try {
             const expression = args.join(' ');
-            const vm = new VM({ timeout: 1000 });
-            const result = vm.run(`(${expression})`);
+            // Sanitize expression to only allow numbers and basic operators
+            const sanitized = expression.replace(/[^0-9+\-*/().\s]/g, '');
+            if (sanitized !== expression) {
+              throw new Error('Invalid characters in expression');
+            }
+            const result = Function(`"use strict"; return (${sanitized})`)();
             output = String(result);
           } catch (error: any) {
             output = `Error: ${error.message}`;

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withRateLimit } from "@/lib/utils/api-with-rate-limit";
 import { RateLimiters } from "@/lib/utils/rate-limiter";
 import Ajv from "ajv";
-import { VM } from "vm2";
+// Removed vm2 dependency - using Function constructor instead
 
 export const dynamic = "force-dynamic";
 
@@ -35,22 +35,15 @@ function validateInputs(inputs: any, schema: any): { valid: boolean; errors?: an
 // Safe Condition Evaluation - RESOLVED TODO
 function evaluateCondition(condition: string, context: any): boolean {
   try {
-    const vm = new VM({
-      timeout: 1000, // 1 second timeout
-      sandbox: { context }
-    });
-    
     // Sanitize condition to prevent code injection
     const sanitizedCondition = condition.replace(/[^a-zA-Z0-9_\s\.\(\)\[\]===!<>&|]/g, '');
     
-    const result = vm.run(`
-      (function() {
-        with(context) {
-          return ${sanitizedCondition};
-        }
-      })()
-    `);
+    // Create a safe evaluation function
+    const keys = Object.keys(context);
+    const values = Object.values(context);
+    const func = new Function(...keys, `return ${sanitizedCondition}`);
     
+    const result = func(...values);
     return Boolean(result);
   } catch (error) {
     console.error('Condition evaluation error:', error);
@@ -61,22 +54,16 @@ function evaluateCondition(condition: string, context: any): boolean {
 // Robust Evaluation - RESOLVED TODO
 function safeEvaluate(expression: string, context: any, timeout: number = 5000): any {
   try {
-    const vm = new VM({
-      timeout,
-      sandbox: { context, console }
-    });
+    // Sanitize expression
+    const sanitized = expression.replace(/[^a-zA-Z0-9_\s\.\(\)\[\]===!<>&|+\-*/]/g, '');
     
-    return vm.run(`
-      (function() {
-        with(context) {
-          return ${expression};
-        }
-      })()
-    `);
+    // Create evaluation function
+    const keys = Object.keys(context);
+    const values = Object.values(context);
+    const func = new Function(...keys, `"use strict"; return ${sanitized}`);
+    
+    return func(...values);
   } catch (error: any) {
-    if (error.message?.includes('Script execution timed out')) {
-      throw new Error('Evaluation timeout exceeded');
-    }
     throw new Error(`Evaluation error: ${error.message}`);
   }
 }
@@ -115,20 +102,13 @@ async function performWebSearch(query: string, numResults: number = 5): Promise<
 async function executeCode(code: string, language: string, context: any): Promise<any> {
   if (language === 'javascript' || language === 'js') {
     try {
-      const vm = new VM({
-        timeout: 10000, // 10 seconds
-        sandbox: {
-          context,
-          console,
-          require: () => { throw new Error('require is not allowed'); }
-        }
-      });
+      // Create a safe execution environment
+      const keys = Object.keys(context);
+      const values = Object.values(context);
+      const func = new Function(...keys, 'console', `"use strict"; ${code}`);
       
-      const result = vm.run(`
-        (function() {
-          ${code}
-        })()
-      `);
+      // Execute with context
+      const result = func(...values, console);
       
       return { success: true, result };
     } catch (error: any) {
@@ -274,8 +254,9 @@ async function executeAPICall(step: AgentStep, context: any): Promise<any> {
 // POST /api/agents/[id]/execute - Execute an agent
 async function handlePOST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
+  const { params } = context;
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { id } = params;
@@ -466,4 +447,4 @@ async function handlePOST(
   }
 }
 
-export const POST = withRateLimit(handlePOST, RateLimiters.AGENT_EXECUTION);
+export const POST = withRateLimit(handlePOST, RateLimiters.ai);

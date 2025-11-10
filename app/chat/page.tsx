@@ -377,9 +377,10 @@ export default function ChatPage() {
                   <div className="prose prose-sm max-w-none prose-pre:bg-gray-900 prose-pre:text-gray-100">
                     <ReactMarkdown
                       components={{
-                        code({node, inline, className, children, ...props}) {
+                        code({node, className, children, ...props}: any) {
                           const match = /language-(\w+)/.exec(className || '')
                           const codeString = String(children).replace(/\n$/, '')
+                          const inline = !className
                           
                           return !inline && match ? (
                             <div className="relative group">

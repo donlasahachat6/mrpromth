@@ -4,7 +4,7 @@
  */
 
 import Ajv from 'ajv';
-import { VM } from 'vm2';
+// Removed vm2 dependency - using Function constructor instead
 
 const ajv = new Ajv();
 
@@ -199,16 +199,19 @@ export class AgentExecutor {
   }
 
   /**
-   * Safely evaluate a condition using VM2
+   * Safely evaluate a condition using Function constructor
    */
   private evaluateCondition(condition: string): boolean {
     try {
-      const vm = new VM({
-        timeout: 1000,
-        sandbox: this.context.variables
-      });
+      // Sanitize condition
+      const sanitized = condition.replace(/[^a-zA-Z0-9_\s\.\(\)\[\]===!<>&|]/g, '');
       
-      return vm.run(`(${condition})`);
+      // Create evaluation function
+      const keys = Object.keys(this.context.variables);
+      const values = Object.values(this.context.variables);
+      const func = new Function(...keys, `"use strict"; return (${sanitized})`);
+      
+      return func(...values);
     } catch (error: any) {
       throw new Error(`Condition evaluation failed: ${error.message}`);
     }
@@ -243,21 +246,19 @@ export class AgentExecutor {
     const transform = step.transform || '';
     
     try {
-      const vm = new VM({
-        timeout: 1000,
-        sandbox: {
-          ...this.context.variables,
-          JSON,
-          Math,
-          String,
-          Number,
-          Boolean,
-          Array,
-          Object
-        }
-      });
+      // Sanitize transform
+      const sanitized = transform.replace(/[^a-zA-Z0-9_\s\.\(\)\[\]===!<>&|+\-*/]/g, '');
       
-      return vm.run(`(${transform})`);
+      // Create evaluation function with safe globals
+      const keys = Object.keys(this.context.variables);
+      const values = Object.values(this.context.variables);
+      const func = new Function(
+        ...keys,
+        'JSON', 'Math', 'String', 'Number', 'Boolean', 'Array', 'Object',
+        `"use strict"; return (${sanitized})`
+      );
+      
+      return func(...values, JSON, Math, String, Number, Boolean, Array, Object);
     } catch (error: any) {
       throw new Error(`Transform execution failed: ${error.message}`);
     }

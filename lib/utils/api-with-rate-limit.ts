@@ -26,18 +26,17 @@ export function getClientIdentifier(req: NextRequest): string {
 
 /**
  * Higher-order function to wrap API route handlers with rate limiting
+ * Simplified version that works with Next.js 14 route handlers
  */
 export function withRateLimit(
+  handler: (req: NextRequest, context?: any) => Promise<NextResponse>,
   limiter: RateLimiter,
   options?: {
     getKey?: (req: NextRequest) => string
     onLimitExceeded?: (info: RateLimitInfo) => NextResponse
   }
 ) {
-  return function <T extends any[]>(
-    handler: (req: NextRequest, ...args: T) => Promise<NextResponse>
-  ) {
-    return async function (req: NextRequest, ...args: T): Promise<NextResponse> {
+  return async function (req: NextRequest, context?: any) {
       try {
         // Get client identifier
         const key = options?.getKey ? options.getKey(req) : getClientIdentifier(req)
@@ -71,28 +70,27 @@ export function withRateLimit(
           )
         }
         
-        // Execute handler
-        const response = await handler(req, ...args)
-        
-        // Add rate limit headers to response
-        addRateLimitHeaders(response.headers, info)
-        
-        return response
-      } catch (error) {
-        // If error is rate limit related, return 429
-        if (error instanceof Error && error.message.includes('Rate limit')) {
-          return NextResponse.json(
-            {
-              error: 'Rate limit exceeded',
-              message: error.message,
-            },
-            { status: 429 }
-          )
-        }
-        
-        // Re-throw other errors
-        throw error
+      // Execute handler
+      const response = context ? await handler(req, context) : await handler(req)
+      
+      // Add rate limit headers to response
+      addRateLimitHeaders(response.headers, info)
+      
+      return response
+    } catch (error) {
+      // If error is rate limit related, return 429
+      if (error instanceof Error && error.message.includes('Rate limit')) {
+        return NextResponse.json(
+          {
+            error: 'Rate limit exceeded',
+            message: error.message,
+          },
+          { status: 429 }
+        )
       }
+      
+      // Re-throw other errors
+      throw error
     }
   }
 }
@@ -104,5 +102,5 @@ export function rateLimited(
   handler: (req: NextRequest, ...args: any[]) => Promise<NextResponse>,
   limiter: RateLimiter
 ) {
-  return withRateLimit(limiter)(handler)
+  return withRateLimit(handler, limiter)
 }

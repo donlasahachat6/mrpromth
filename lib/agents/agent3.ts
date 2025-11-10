@@ -217,7 +217,7 @@ async function generateAPIRoutes(architecture: Agent2Output) {
   }
   
   for (const endpoint of architecture.api_endpoints) {
-    const route = endpoint as APIRoute
+    const route = endpoint as unknown as APIRoute
     
     // Generate API route code using AI
     const prompt = `Generate a Next.js 13+ API route file for:
@@ -265,9 +265,9 @@ async function generateDatabaseFunctions(architecture: Agent2Output) {
   const functions: Agent3Output['database_functions'] = []
   
   // Generate common utility functions
-  const prompt = `Generate PostgreSQL functions for a ${architecture.project_type || 'web application'}:
+  const prompt = `Generate PostgreSQL functions for a web application:
 
-Project Description: ${architecture.description || 'No description'}
+Project Description: ${(architecture as any).description || 'No description'}
 
 Generate the following functions:
 1. update_updated_at_column() - Trigger function to auto-update updated_at
@@ -357,7 +357,7 @@ async function generateValidationSchemas(architecture: Agent2Output) {
   }
   
   for (const endpoint of architecture.api_endpoints) {
-    const route = endpoint as APIRoute
+    const route = endpoint as unknown as APIRoute
     
     if (!route.parameters || route.parameters.length === 0) {
       continue

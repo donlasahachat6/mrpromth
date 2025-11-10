@@ -44,11 +44,11 @@ export async function performOCR(imagePath: string, lang: string = 'eng'): Promi
     return {
       text: data.text,
       confidence: data.confidence,
-      words: data.words.map(word => ({
+      words: (data as any).words?.map((word: any) => ({
         text: word.text,
         confidence: word.confidence,
         bbox: word.bbox
-      }))
+      })) || []
     };
   } finally {
     await worker.terminate();
@@ -293,12 +293,13 @@ export async function createThumbnail(
  * Extract dominant colors from image
  */
 export async function extractColors(imagePath: string, count: number = 5): Promise<string[]> {
-  const { dominant } = await sharp(imagePath)
+  const { data, info } = await sharp(imagePath)
     .resize(100, 100)
     .raw()
     .toBuffer({ resolveWithObject: true });
   
   // Simple color extraction (this is a basic implementation)
   // For production, consider using a library like 'node-vibrant'
+  // TODO: Implement actual color extraction from pixel data
   return ['#000000']; // Placeholder
 }
