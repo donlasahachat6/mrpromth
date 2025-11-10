@@ -1,6 +1,13 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  performOCR as performImageOCR,
+  describeImage as describeImageAI,
+  getImageMetadata,
+  resizeImage as resizeImageFile,
+  convertImage as convertImageFile
+} from "@/lib/image-processor";
 import { writeFile, unlink, readFile } from "fs/promises";
 import { join } from "path";
 
@@ -133,10 +140,9 @@ async function analyzeImage(imagePath: string, buffer: Buffer): Promise<any> {
 // Helper function to perform OCR
 async function performOCR(imagePath: string): Promise<{ text: string }> {
   try {
-    // TODO: Implement OCR using Tesseract or cloud service
-    // For now, return placeholder
+    const result = await performImageOCR(imagePath);
     return {
-      text: "OCR functionality coming soon"
+      text: result.text
     };
   } catch (error) {
     console.error("Error performing OCR:", error);
@@ -147,17 +153,10 @@ async function performOCR(imagePath: string): Promise<{ text: string }> {
 // Helper function to describe image using AI
 async function describeImage(imagePath: string, buffer: Buffer): Promise<{ description: string; labels: string[] }> {
   try {
-    // Convert image to base64
-    const base64Image = buffer.toString("base64");
-    const dataUrl = `data:image/jpeg;base64,${base64Image}`;
-
-    // Call OpenAI Vision API or similar
-    // For now, return placeholder
-    // TODO: Implement actual image description using GPT-4 Vision or similar
-
+    const result = await describeImageAI(imagePath);
     return {
-      description: "Image description functionality coming soon",
-      labels: []
+      description: result.description,
+      labels: result.objects
     };
   } catch (error) {
     console.error("Error describing image:", error);
@@ -168,12 +167,13 @@ async function describeImage(imagePath: string, buffer: Buffer): Promise<{ descr
 // Helper function to resize image
 async function resizeImage(imagePath: string, width: number, height: number): Promise<any> {
   try {
-    // TODO: Implement image resizing using sharp
-    // For now, return placeholder
+    const outputPath = imagePath.replace(/\.(\w+)$/, `_resized_${width}x${height}.$1`);
+    const result = await resizeImageFile(imagePath, outputPath, width, height);
     return {
-      width,
-      height,
-      message: "Image resize functionality coming soon"
+      width: result.width,
+      height: result.height,
+      size: result.size,
+      path: outputPath
     };
   } catch (error) {
     console.error("Error resizing image:", error);
@@ -184,11 +184,12 @@ async function resizeImage(imagePath: string, width: number, height: number): Pr
 // Helper function to convert image format
 async function convertImage(imagePath: string, format: string): Promise<any> {
   try {
-    // TODO: Implement image conversion using sharp
-    // For now, return placeholder
+    const outputPath = imagePath.replace(/\.\w+$/, `.${format}`);
+    const result = await convertImageFile(imagePath, outputPath, format as any);
     return {
-      format,
-      message: "Image conversion functionality coming soon"
+      format: result.format,
+      size: result.size,
+      path: outputPath
     };
   } catch (error) {
     console.error("Error converting image:", error);

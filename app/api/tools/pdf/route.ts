@@ -1,6 +1,7 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { uploadFile } from "@/lib/storage";
 import { writeFile, unlink } from "fs/promises";
 import { join } from "path";
 import { exec } from "child_process";
@@ -142,10 +143,21 @@ async function extractImagesFromPDF(pdfPath: string): Promise<{ images: string[]
     
     // List extracted images
     const { stdout } = await execAsync(`ls "${outputDir}"`);
-    const images = stdout.trim().split("\n").filter(f => f);
+    const imageFiles = stdout.trim().split("\n").filter(f => f);
 
-    // TODO: Upload images to storage and return URLs
-    // For now, return image filenames
+    // Upload images to storage and get URLs
+    const uploadPromises = imageFiles.map(async (fileName) => {
+      const filePath = join(outputDir, fileName);
+      try {
+        const result = await uploadFile(filePath, 'files', `pdf-images/${Date.now()}_${fileName}`);
+        return result.url;
+      } catch (error) {
+        console.error(`Failed to upload ${fileName}:`, error);
+        return null;
+      }
+    });
+    
+    const images = (await Promise.all(uploadPromises)).filter(url => url !== null);
     
     return {
       images,
@@ -191,9 +203,21 @@ async function convertPDFToImages(pdfPath: string): Promise<{ images: string[]; 
     
     // List generated images
     const { stdout } = await execAsync(`ls "${outputDir}"`);
-    const images = stdout.trim().split("\n").filter(f => f);
+    const imageFiles = stdout.trim().split("\n").filter(f => f);
 
-    // TODO: Upload images to storage and return URLs
+    // Upload images to storage and get URLs
+    const uploadPromises = imageFiles.map(async (fileName) => {
+      const filePath = join(outputDir, fileName);
+      try {
+        const result = await uploadFile(filePath, 'files', `pdf-pages/${Date.now()}_${fileName}`);
+        return result.url;
+      } catch (error) {
+        console.error(`Failed to upload ${fileName}:`, error);
+        return null;
+      }
+    });
+    
+    const images = (await Promise.all(uploadPromises)).filter(url => url !== null);
     
     return {
       images,
