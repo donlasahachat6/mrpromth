@@ -68,15 +68,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Log usage (skip if usage_logs table doesn't exist)
-    // TODO: Create usage_logs table or use activity_logs
-    // await supabase.from("activity_logs").insert({
-    //   user_id: user.id,
-    //   action: "chat_request",
-    //   resource_type: "chat",
-    //   resource_id: session_id,
-    //   details: { mode, model, message_count: messages.length },
-    // });
+    // Log usage to activity_logs
+    await supabase.from("activity_logs").insert({
+      user_id: user.id,
+      action: "chat_request",
+      resource_type: "chat",
+      resource_id: session_id,
+      details: { mode, model, message_count: messages.length },
+    });
 
     if (!enableStream) {
       // Non-streaming response

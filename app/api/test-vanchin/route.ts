@@ -19,7 +19,8 @@ export async function GET() {
 
     // Test Vanchin API call using OpenAI-compatible format
     // Based on official documentation
-    const url = `${baseUrl}/chat/completions`;
+    // The base URL already includes the endpoint path
+    const url = baseUrl;
     
     console.log('[Test Vanchin] Testing with:', { url, endpoint });
     

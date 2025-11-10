@@ -61,8 +61,8 @@ export async function callVanchinAPI(
     }
 
     try {
-      // Use OpenAI-compatible endpoint format
-      const url = `${VANCHIN_BASE_URL}/chat/completions`;
+      // Use Vanchin base URL directly (it already includes the endpoint path)
+      const url = VANCHIN_BASE_URL;
       
       console.log(`[Vanchin Client] Attempt ${attempt + 1} with key ${key.index}, endpoint: ${key.endpoint}`);
       
@@ -128,7 +128,7 @@ export async function* streamVanchinAPI(
   }
 
   try {
-    const url = `${VANCHIN_BASE_URL}/chat/completions`;
+    const url = VANCHIN_BASE_URL;
     
     console.log(`[Vanchin Client] Streaming with key ${key.index}, endpoint: ${key.endpoint}`);
     
