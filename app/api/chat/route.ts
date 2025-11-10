@@ -26,7 +26,8 @@ interface ChatRequestBody {
 async function handlePOST(request: NextRequest) {
   console.log('[Chat API] Received POST request');
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
     const { data: { user } } = await supabase.auth.getUser();
     console.log('[Chat API] User:', user?.id || 'No user');
 
