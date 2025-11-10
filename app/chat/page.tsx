@@ -218,8 +218,8 @@ export default function ChatPage() {
             onChange={(e) => setSelectedModel(e.target.value)}
             className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option value="auto">🤖 Auto (Load Balanced)</option>
-            <option value="random">🎲 Random Selection</option>
+            <option value="auto"> Auto (Load Balanced)</option>
+            <option value="random"> Random Selection</option>
             <option value="model_1">Model 1</option>
             <option value="model_2">Model 2</option>
             <option value="model_3">Model 3</option>
@@ -237,7 +237,7 @@ export default function ChatPage() {
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">🤖</div>
+            <div className="text-6xl mb-4"></div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               ยินดีต้อนรับสู่ MR.Promth AI
             </h2>
@@ -246,7 +246,7 @@ export default function ChatPage() {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
               <div className="p-4 bg-white rounded-lg border border-gray-200">
-                <div className="text-2xl mb-2">💻</div>
+                <div className="text-2xl mb-2"></div>
                 <h3 className="font-semibold text-gray-900 mb-1">สร้างโค้ด</h3>
                 <p className="text-sm text-gray-600">สร้างโปรเจคเว็บไซต์, แอพ, API อัตโนมัติ</p>
               </div>
@@ -278,7 +278,7 @@ export default function ChatPage() {
             >
               <div className="flex items-start gap-2">
                 {message.role === 'assistant' && (
-                  <div className="text-xl">🤖</div>
+                  <div className="text-xl"></div>
                 )}
                 <div className="flex-1">
                   <p className="whitespace-pre-wrap">{message.content}</p>
@@ -311,7 +311,7 @@ export default function ChatPage() {
           <div className="flex justify-start">
             <div className="max-w-3xl px-4 py-3 rounded-lg bg-white border border-gray-200">
               <div className="flex items-center gap-2">
-                <div className="text-xl">🤖</div>
+                <div className="text-xl"></div>
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>

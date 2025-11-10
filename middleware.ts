@@ -13,7 +13,7 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Define protected paths
-  const protectedPaths = ['/app', '/admin'];
+  const protectedPaths = ['/app', '/admin', '/chat', '/dashboard', '/projects', '/agents'];
   const isProtectedPath = protectedPaths.some(path =>
     req.nextUrl.pathname.startsWith(path)
   );
@@ -61,9 +61,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // If user is authenticated and trying to access login/signup pages
-  if (session && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup')) {
-    // Redirect to app
-    return NextResponse.redirect(new URL('/app/dashboard', req.url));
+  if (session && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/signup' || req.nextUrl.pathname === '/auth/login' || req.nextUrl.pathname === '/auth/signup')) {
+    // Redirect to chat
+    return NextResponse.redirect(new URL('/chat', req.url));
   }
 
   return res;
