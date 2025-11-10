@@ -1,7 +1,13 @@
 /**
- * Input Validation & Sanitization
+ * Input Validation & Sanitization - ENHANCED VERSION
  * Prevents injection attacks and validates user input
  */
+
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+
+const ajv = new Ajv({ allErrors: true });
+addFormats(ajv);
 
 /**
  * Sanitize string input
@@ -9,9 +15,9 @@
 export function sanitizeString(input: string): string {
   return input
     .trim()
-    .replace(/[<>]/g, '') // Remove < and >
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
     .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers
 }
 
 /**
@@ -70,6 +76,14 @@ export function validateEmail(email: string): { valid: boolean; error?: string }
 }
 
 /**
+ * Validate email format (simple boolean)
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
  * Validate URL
  */
 export function validateUrl(url: string): { valid: boolean; error?: string } {
@@ -88,6 +102,18 @@ export function validateUrl(url: string): { valid: boolean; error?: string } {
 }
 
 /**
+ * Validate URL format (simple boolean)
+ */
+export function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Validate UUID
  */
 export function validateUUID(uuid: string): { valid: boolean; error?: string } {
@@ -98,6 +124,14 @@ export function validateUUID(uuid: string): { valid: boolean; error?: string } {
   }
   
   return { valid: true }
+}
+
+/**
+ * Validate UUID format (simple boolean)
+ */
+export function isValidUUID(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
 }
 
 /**
@@ -190,4 +224,203 @@ export function validateWorkflowRequest(request: any): { valid: boolean; errors:
     valid: errors.length === 0,
     errors
   }
+}
+
+/**
+ * Sanitize filename
+ * Removes path traversal attempts and dangerous characters
+ */
+export function sanitizeFilename(filename: string): string {
+  return filename
+    .replace(/\.\./g, '') // Remove path traversal
+    .replace(/[\/\\]/g, '') // Remove path separators
+    .replace(/[^a-zA-Z0-9._-]/g, '_') // Replace special chars with underscore
+    .substring(0, 255); // Limit length
+}
+
+/**
+ * Validate file size
+ */
+export function isValidFileSize(size: number, maxSizeMB: number = 10): boolean {
+  const maxBytes = maxSizeMB * 1024 * 1024;
+  return size > 0 && size <= maxBytes;
+}
+
+/**
+ * Validate file type
+ */
+export function isValidFileType(
+  mimeType: string,
+  allowedTypes: string[]
+): boolean {
+  return allowedTypes.some(type => {
+    if (type.endsWith('/*')) {
+      const prefix = type.slice(0, -2);
+      return mimeType.startsWith(prefix);
+    }
+    return mimeType === type;
+  });
+}
+
+/**
+ * Common file type groups
+ */
+export const FILE_TYPES = {
+  images: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
+  documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  spreadsheets: ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  archives: ['application/zip', 'application/x-tar', 'application/gzip'],
+  code: ['text/plain', 'application/json', 'application/javascript', 'text/html', 'text/css']
+};
+
+/**
+ * Validate JSON schema
+ */
+export function validateSchema(data: any, schema: object): {
+  valid: boolean;
+  errors: string[];
+} {
+  const validate = ajv.compile(schema);
+  const valid = validate(data);
+  
+  return {
+    valid,
+    errors: valid ? [] : (validate.errors?.map(e => `${e.instancePath} ${e.message}`) || [])
+  };
+}
+
+/**
+ * Common validation schemas
+ */
+export const SCHEMAS = {
+  // User registration
+  userRegistration: {
+    type: 'object',
+    required: ['email', 'password'],
+    properties: {
+      email: { type: 'string', format: 'email' },
+      password: { type: 'string', minLength: 8, maxLength: 100 },
+      displayName: { type: 'string', minLength: 1, maxLength: 100 }
+    },
+    additionalProperties: false
+  },
+  
+  // Project creation
+  projectCreation: {
+    type: 'object',
+    required: ['name', 'description'],
+    properties: {
+      name: { type: 'string', minLength: 1, maxLength: 100 },
+      description: { type: 'string', minLength: 1, maxLength: 1000 },
+      prompt: { type: 'string', minLength: 1, maxLength: 5000 }
+    },
+    additionalProperties: false
+  },
+  
+  // Chat message
+  chatMessage: {
+    type: 'object',
+    required: ['message'],
+    properties: {
+      message: { type: 'string', minLength: 1, maxLength: 10000 },
+      sessionId: { type: 'string', format: 'uuid' },
+      model: { type: 'string' }
+    },
+    additionalProperties: false
+  }
+};
+
+/**
+ * Validate password strength
+ */
+export function validatePasswordStrength(password: string): {
+  valid: boolean;
+  score: number;
+  feedback: string[];
+} {
+  const feedback: string[] = [];
+  let score = 0;
+  
+  // Length check
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (password.length >= 16) score++;
+  
+  // Complexity checks
+  if (/[a-z]/.test(password)) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^a-zA-Z0-9]/.test(password)) score++;
+  
+  // Feedback
+  if (password.length < 8) feedback.push('Password must be at least 8 characters');
+  if (!/[a-z]/.test(password)) feedback.push('Add lowercase letters');
+  if (!/[A-Z]/.test(password)) feedback.push('Add uppercase letters');
+  if (!/[0-9]/.test(password)) feedback.push('Add numbers');
+  if (!/[^a-zA-Z0-9]/.test(password)) feedback.push('Add special characters');
+  
+  return {
+    valid: score >= 4,
+    score,
+    feedback
+  };
+}
+
+/**
+ * Sanitize HTML
+ * Basic XSS protection
+ */
+export function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+    .replace(/<embed\b[^<]*>/gi, '')
+    .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
+    .replace(/on\w+\s*=\s*'[^']*'/gi, '');
+}
+
+/**
+ * Validate SQL query (basic check)
+ * Prevents common SQL injection patterns
+ */
+export function isValidSQLQuery(query: string): boolean {
+  const dangerousPatterns = [
+    /;\s*drop\s+/i,
+    /;\s*delete\s+/i,
+    /;\s*update\s+/i,
+    /;\s*insert\s+/i,
+    /;\s*exec\s+/i,
+    /;\s*execute\s+/i,
+    /union\s+select/i,
+    /--/,
+    /\/\*/,
+    /xp_/i
+  ];
+  
+  return !dangerousPatterns.some(pattern => pattern.test(query));
+}
+
+/**
+ * Sanitize object keys
+ * Prevents prototype pollution
+ */
+export function sanitizeObjectKeys(obj: any): any {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeObjectKeys);
+  }
+  
+  const sanitized: any = {};
+  for (const key in obj) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      continue;
+    }
+    sanitized[key] = sanitizeObjectKeys(obj[key]);
+  }
+  
+  return sanitized;
 }
