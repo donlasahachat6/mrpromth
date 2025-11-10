@@ -1,10 +1,12 @@
 /**
  * Vanchin AI Client
- * Wrapper for calling Vanchin API with load balancing and error handling
+ * Wrapper for calling Vanchin API using OpenAI-compatible format
+ * Based on official Vanchin documentation
  */
 
 import { getVanchinLoadBalancer } from './vanchin-load-balancer';
 
+// Use the correct Vanchin base URL format
 const VANCHIN_BASE_URL = (process.env.VANCHIN_BASE_URL || 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints').trim();
 
 export interface VanchinChatMessage {
@@ -42,6 +44,7 @@ export interface VanchinChatResponse {
 
 /**
  * Call Vanchin API with automatic load balancing and failover
+ * Uses OpenAI-compatible format as per Vanchin documentation
  */
 export async function callVanchinAPI(
   request: VanchinChatRequest,
@@ -58,7 +61,10 @@ export async function callVanchinAPI(
     }
 
     try {
+      // Use OpenAI-compatible endpoint format
       const url = `${VANCHIN_BASE_URL}/chat/completions`;
+      
+      console.log(`[Vanchin Client] Attempt ${attempt + 1} with key ${key.index}, endpoint: ${key.endpoint}`);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -67,13 +73,17 @@ export async function callVanchinAPI(
           'Authorization': `Bearer ${key.apiKey}`,
         },
         body: JSON.stringify({
-          ...request,
-          model: key.endpoint,
+          model: key.endpoint, // Use the endpoint ID as model
+          messages: request.messages,
+          temperature: request.temperature ?? 0.7,
+          max_tokens: request.max_tokens ?? 2000,
+          stream: false,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`[Vanchin Client] API error (${response.status}):`, errorText);
         throw new Error(`Vanchin API error (${response.status}): ${errorText}`);
       }
 
@@ -81,6 +91,8 @@ export async function callVanchinAPI(
       
       // Mark key as successful
       loadBalancer.markKeySuccess(key.index);
+      
+      console.log(`[Vanchin Client] Success with key ${key.index}`);
       
       return data;
     } catch (error) {
@@ -103,6 +115,7 @@ export async function callVanchinAPI(
 
 /**
  * Call Vanchin API with streaming support
+ * Uses OpenAI-compatible SSE format
  */
 export async function* streamVanchinAPI(
   request: VanchinChatRequest
@@ -117,6 +130,8 @@ export async function* streamVanchinAPI(
   try {
     const url = `${VANCHIN_BASE_URL}/chat/completions`;
     
+    console.log(`[Vanchin Client] Streaming with key ${key.index}, endpoint: ${key.endpoint}`);
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -124,14 +139,17 @@ export async function* streamVanchinAPI(
         'Authorization': `Bearer ${key.apiKey}`,
       },
       body: JSON.stringify({
-        ...request,
-        model: key.endpoint,
+        model: key.endpoint, // Use the endpoint ID as model
+        messages: request.messages,
+        temperature: request.temperature ?? 0.7,
+        max_tokens: request.max_tokens ?? 2000,
         stream: true,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[Vanchin Client] Streaming error (${response.status}):`, errorText);
       throw new Error(`Vanchin API error (${response.status}): ${errorText}`);
     }
 
@@ -170,7 +188,7 @@ export async function* streamVanchinAPI(
               yield content;
             }
           } catch (error) {
-            console.error('[Vanchin Client] Failed to parse SSE data:', error);
+            console.error('[Vanchin Client] Failed to parse SSE data:', trimmed, error);
           }
         }
       }
@@ -178,6 +196,7 @@ export async function* streamVanchinAPI(
 
     // Mark key as successful
     loadBalancer.markKeySuccess(key.index);
+    console.log(`[Vanchin Client] Streaming completed successfully with key ${key.index}`);
   } catch (error) {
     console.error(`[Vanchin Client] Streaming failed with key ${key.index}:`, error);
     loadBalancer.markKeyFailed(key.index);

@@ -17,8 +17,12 @@ export async function GET() {
       }, { status: 500 });
     }
 
-    // Test Vanchin API call
+    // Test Vanchin API call using OpenAI-compatible format
+    // Based on official documentation
     const url = `${baseUrl}/chat/completions`;
+    
+    console.log('[Test Vanchin] Testing with:', { url, endpoint });
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -26,16 +30,24 @@ export async function GET() {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: endpoint,
+        model: endpoint, // Use endpoint ID as model parameter
         messages: [
           { role: 'system', content: 'You are a helpful assistant' },
           { role: 'user', content: 'Say hello in Thai' }
         ],
-        max_tokens: 50
+        max_tokens: 50,
+        temperature: 0.7
       })
     });
 
     const responseText = await response.text();
+    let parsedResponse = null;
+    
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch (e) {
+      // Response is not JSON
+    }
     
     return NextResponse.json({
       success: response.ok,
@@ -44,11 +56,12 @@ export async function GET() {
       url,
       baseUrl,
       endpoint,
-      responsePreview: responseText.substring(0, 500),
+      response: parsedResponse || responseText.substring(0, 500),
       headers: Object.fromEntries(response.headers.entries())
     });
 
   } catch (error: any) {
+    console.error('[Test Vanchin] Error:', error);
     return NextResponse.json({
       error: 'Exception occurred',
       message: error.message,
