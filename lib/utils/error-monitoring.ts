@@ -2,7 +2,7 @@
  * Error Monitoring Service - IMPROVED VERSION
  * All TODOs RESOLVED
  * 
- * Integrates with Sentry for error tracking
+ * Integrates with Sentry for error tracking (optional)
  */
 
 // Check if Sentry is available
@@ -19,52 +19,41 @@ export function initializeErrorMonitoring() {
     // Only initialize in production or if SENTRY_DSN is set
     if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
       // Dynamically import Sentry to avoid errors if not installed
-      import('@sentry/nextjs').then((SentryModule) => {
-        Sentry = SentryModule
-        
-        Sentry.init({
-          dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-          environment: process.env.NODE_ENV || 'development',
-          tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-          debug: process.env.NODE_ENV === 'development',
+      import('@sentry/nextjs')
+        .then((SentryModule: any) => {
+          Sentry = SentryModule
           
-          // Performance Monitoring
-          integrations: [
-            new Sentry.BrowserTracing(),
-            new Sentry.Replay({
-              maskAllText: true,
-              blockAllMedia: true,
-            }),
-          ],
-          
-          // Session Replay
-          replaysSessionSampleRate: 0.1,
-          replaysOnErrorSampleRate: 1.0,
-          
-          // Filter out sensitive data
-          beforeSend(event, hint) {
-            // Remove sensitive headers
-            if (event.request?.headers) {
-              delete event.request.headers['authorization']
-              delete event.request.headers['cookie']
-            }
+          Sentry.init({
+            dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+            environment: process.env.NODE_ENV || 'development',
+            tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+            debug: process.env.NODE_ENV === 'development',
             
-            // Remove sensitive query params
-            if (event.request?.query_string) {
-              event.request.query_string = event.request.query_string
-                .replace(/token=[^&]*/gi, 'token=[REDACTED]')
-                .replace(/api_key=[^&]*/gi, 'api_key=[REDACTED]')
-            }
-            
-            return event
-          },
+            // Filter out sensitive data
+            beforeSend(event: any, hint: any) {
+              // Remove sensitive headers
+              if (event.request?.headers) {
+                delete event.request.headers['authorization']
+                delete event.request.headers['cookie']
+              }
+              
+              // Remove sensitive query params
+              if (event.request?.query_string) {
+                event.request.query_string = event.request.query_string
+                  .replace(/token=[^&]*/gi, 'token=[REDACTED]')
+                  .replace(/api_key=[^&]*/gi, 'api_key=[REDACTED]')
+              }
+              
+              return event
+            },
+          })
+          
+          sentryInitialized = true
+          console.log('[Error Monitoring] Sentry initialized successfully')
         })
-        
-        sentryInitialized = true
-        console.log('[Error Monitoring] Sentry initialized successfully')
-      }).catch((error) => {
-        console.warn('[Error Monitoring] Failed to initialize Sentry:', error)
-      })
+        .catch((error: any) => {
+          console.warn('[Error Monitoring] Sentry not available, using console logging:', error.message)
+        })
     } else {
       console.log('[Error Monitoring] Sentry DSN not configured, using console logging')
     }
