@@ -3,6 +3,56 @@
  * Defines which models are assigned to which agents
  */
 
+// Usage tracking for least-used strategy
+const modelUsageCount: Record<string, number> = {}
+
+/**
+ * Get least used model for an agent - RESOLVED TODO
+ */
+function getLeastUsedModel(agent: AgentType): string {
+  const config = AGENT_MODEL_ALLOCATION[agent]
+  const allModels = [...config.primary, ...config.backup]
+  
+  // Initialize usage count for models that haven't been used
+  allModels.forEach(model => {
+    if (!(model in modelUsageCount)) {
+      modelUsageCount[model] = 0
+    }
+  })
+  
+  // Find the least used model
+  let leastUsedModel = allModels[0]
+  let minUsage = modelUsageCount[leastUsedModel]
+  
+  for (const model of allModels) {
+    if (modelUsageCount[model] < minUsage) {
+      leastUsedModel = model
+      minUsage = modelUsageCount[model]
+    }
+  }
+  
+  // Increment usage count
+  modelUsageCount[leastUsedModel]++
+  
+  return leastUsedModel
+}
+
+/**
+ * Reset usage tracking (for testing or periodic resets)
+ */
+export function resetModelUsageTracking() {
+  Object.keys(modelUsageCount).forEach(key => {
+    modelUsageCount[key] = 0
+  })
+}
+
+/**
+ * Get current usage statistics
+ */
+export function getModelUsageStats(): Record<string, number> {
+  return { ...modelUsageCount }
+}
+
 export type AgentType =
   | 'project-planner'
   | 'frontend-developer'
@@ -182,8 +232,8 @@ export function getNextModelForAgent(
       return getRandomAgentModel(agent)
 
     case 'least-used':
-      // TODO: Implement least-used strategy with usage tracking
-      return config.primary[0]
+      // Implement least-used strategy with usage tracking - RESOLVED TODO
+      return getLeastUsedModel(agent)
 
     default:
       return config.primary[0]

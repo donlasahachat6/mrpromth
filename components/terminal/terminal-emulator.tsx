@@ -25,6 +25,7 @@ export function TerminalEmulator({
   const fitAddon = useRef<FitAddon | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionId || null)
+  const [currentCommand, setCurrentCommand] = useState('')
   const supabase = createClientComponentClient()
 
   useEffect(() => {
@@ -197,9 +198,29 @@ export function TerminalEmulator({
     if (data === '\r') { // Enter
       terminal.write('\r\n')
       
-      // TODO: Send command to backend for execution
-      // For now, just echo
+      // Send command to backend for execution - RESOLVED TODO
+      const command = currentCommand.trim()
+      if (command) {
+        try {
+          const response = await fetch('/api/terminal/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              command,
+              sessionId: currentSessionId
+            })
+          })
+          
+          const result = await response.json()
+          if (result.output) {
+            terminal.write(result.output + '\r\n')
+          }
+        } catch (error) {
+          terminal.write('Error executing command\r\n')
+        }
+      }
       terminal.write('\x1b[1;32m$\x1b[0m ')
+      setCurrentCommand('')
       
       if (currentSessionId && isConnected) {
         // Save input to database
@@ -210,11 +231,16 @@ export function TerminalEmulator({
         })
       }
     } else if (data === '\u007F') { // Backspace
-      terminal.write('\b \b')
+      if (currentCommand.length > 0) {
+        setCurrentCommand(prev => prev.slice(0, -1))
+        terminal.write('\b \b')
+      }
     } else if (data === '\u0003') { // Ctrl+C
       terminal.write('^C\r\n')
       terminal.write('\x1b[1;32m$\x1b[0m ')
+      setCurrentCommand('')
     } else {
+      setCurrentCommand(prev => prev + data)
       terminal.write(data)
     }
   }

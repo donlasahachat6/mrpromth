@@ -118,18 +118,43 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Helper function to analyze image
+// Helper function to analyze image - RESOLVED TODO
 async function analyzeImage(imagePath: string, buffer: Buffer): Promise<any> {
   try {
-    // Get basic image info
-    const stats = await import("fs/promises").then(fs => fs.stat(imagePath));
+    // Use sharp to get detailed image metadata
+    const sharp = (await import('sharp')).default;
+    const metadata = await sharp(buffer).metadata();
+    const stats = await sharp(buffer).stats();
     
-    // For more detailed analysis, we would use a library like sharp
-    // For now, return basic info
     return {
-      size: stats.size,
-      format: imagePath.split(".").pop(),
-      // TODO: Add width, height, color space, etc. using sharp
+      size: buffer.length,
+      format: metadata.format,
+      width: metadata.width,
+      height: metadata.height,
+      space: metadata.space,
+      channels: metadata.channels,
+      depth: metadata.depth,
+      density: metadata.density,
+      hasAlpha: metadata.hasAlpha,
+      orientation: metadata.orientation,
+      isProgressive: metadata.isProgressive,
+      pages: metadata.pages,
+      pageHeight: metadata.pageHeight,
+      // Color statistics
+      stats: {
+        channels: stats.channels.map((ch: any) => ({
+          min: ch.min,
+          max: ch.max,
+          sum: ch.sum,
+          squaresSum: ch.squaresSum,
+          mean: ch.mean,
+          stdev: ch.stdev,
+          minX: ch.minX,
+          minY: ch.minY,
+          maxX: ch.maxX,
+          maxY: ch.maxY
+        }))
+      }
     };
   } catch (error) {
     console.error("Error analyzing image:", error);

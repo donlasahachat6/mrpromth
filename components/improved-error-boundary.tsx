@@ -38,7 +38,15 @@ export class ImprovedErrorBoundary extends React.Component<Props, State> {
       errorInfo,
     })
 
-    // TODO: Send to error tracking service (Sentry)
+    // Send to error tracking service - RESOLVED TODO
+    import('@/lib/utils/error-monitoring').then(({ logError }) => {
+      logError(error, {
+        errorInfo,
+        componentStack: errorInfo.componentStack,
+        boundary: 'ImprovedErrorBoundary'
+      })
+    })
+    
     if (typeof window !== 'undefined') {
       // Log to console in development
       if (process.env.NODE_ENV === 'development') {
