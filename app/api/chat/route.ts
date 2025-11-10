@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { callVanchinAPI, streamVanchinAPI } from "@/lib/vanchin-client";
+import { withRateLimit } from "@/lib/utils/api-with-rate-limit";
+import { RateLimiters } from "@/lib/utils/rate-limiter";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
@@ -21,7 +23,7 @@ interface ChatRequestBody {
   max_tokens?: number;
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { user } } = await supabase.auth.getUser();
@@ -31,6 +33,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body: ChatRequestBody = await request.json();
+    
+    // Validate request body
+    if (!body.session_id || !body.messages || !Array.isArray(body.messages)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    
+    if (body.messages.length === 0) {
+      return NextResponse.json({ error: "Messages array cannot be empty" }, { status: 400 });
+    }
     const { 
       session_id, 
       messages, 
@@ -211,3 +222,11 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// Export POST with rate limiting
+export const POST = withRateLimit(handlePOST, RateLimiters.ai, {
+  getKey: (req) => {
+    const userId = req.headers.get('x-user-id');
+    return userId || `ip:${req.headers.get('x-forwarded-for') || 'unknown'}`;
+  }
+});
