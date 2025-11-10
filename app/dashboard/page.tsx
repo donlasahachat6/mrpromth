@@ -57,37 +57,25 @@ export default function DashboardPage() {
     setLoading(true)
     
     try {
-      // Load stats (mock data for now)
-      // TODO: Replace with actual API calls
-      setStats({
-        totalProjects: 12,
-        totalPrompts: 45,
-        totalChats: 28,
-        tokensUsed: 125000,
-        requestsToday: 15
-      })
+      // Load stats from API
+      const statsResponse = await fetch('/api/dashboard/stats')
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData)
+      } else {
+        console.error('Failed to load stats')
+        // Keep default values if API fails
+      }
       
-      // Load recent activity (mock data for now)
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'chat',
-          title: 'AI Code Review Discussion',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-        },
-        {
-          id: '2',
-          type: 'project',
-          title: 'E-commerce Website Generator',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
-        },
-        {
-          id: '3',
-          type: 'prompt',
-          title: 'React Component Generator',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString()
-        }
-      ])
+      // Load recent activity from API
+      const activityResponse = await fetch('/api/dashboard/activity')
+      if (activityResponse.ok) {
+        const activityData = await activityResponse.json()
+        setRecentActivity(activityData)
+      } else {
+        console.error('Failed to load activity')
+        // Keep empty array if API fails
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {

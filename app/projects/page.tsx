@@ -45,50 +45,28 @@ export default function ProjectsPage() {
     setLoading(true)
     
     try {
-      // TODO: Replace with actual API call
-      // Mock data for now
-      const mockProjects: Project[] = [
-        {
-          id: '1',
-          name: 'E-commerce Platform',
-          description: 'Full-stack e-commerce website with Next.js and Stripe',
-          type: 'web',
-          status: 'active',
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-          updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-        },
-        {
-          id: '2',
-          name: 'Task Management API',
-          description: 'RESTful API for task management with authentication',
-          type: 'api',
-          status: 'completed',
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
-          updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString()
-        },
-        {
-          id: '3',
-          name: 'Blog CMS',
-          description: 'Content management system for blogging',
-          type: 'web',
-          status: 'active',
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(),
-          updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
-        },
-        {
-          id: '4',
-          name: 'Mobile App Backend',
-          description: 'Backend services for mobile application',
-          type: 'api',
-          status: 'archived',
-          created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
-          updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15).toISOString()
-        }
-      ]
-      
-      setProjects(mockProjects)
+      // Load projects from API
+      const response = await fetch('/api/projects')
+      if (response.ok) {
+        const data = await response.json()
+        // Transform API data to match Project interface
+        const transformedProjects = data.projects.map((project: any) => ({
+          id: project.id,
+          name: project.name,
+          description: project.description || '',
+          type: project.type || 'web',
+          status: project.status || 'active',
+          created_at: project.created_at,
+          updated_at: project.updated_at
+        }))
+        setProjects(transformedProjects)
+      } else {
+        console.error('Failed to load projects')
+        setProjects([])
+      }
     } catch (error) {
       console.error('Error loading projects:', error)
+      setProjects([])
     } finally {
       setLoading(false)
     }

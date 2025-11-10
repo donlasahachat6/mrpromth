@@ -110,12 +110,12 @@ const MOCK_AGENTS: Agent[] = [
 ]
 
 export default function AgentsPage() {
-  const [agents, setAgents] = useState<Agent[]>(MOCK_AGENTS)
-  const [filteredAgents, setFilteredAgents] = useState<Agent[]>(MOCK_AGENTS)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const [showActiveOnly, setShowActiveOnly] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   
   const router = useRouter()
   const supabase = createClientComponentClient()
@@ -126,7 +126,7 @@ export default function AgentsPage() {
   
   useEffect(() => {
     filterAgents()
-  }, [selectedCategory, searchQuery, showActiveOnly])
+  }, [agents, selectedCategory, searchQuery, showActiveOnly])
   
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -134,6 +134,41 @@ export default function AgentsPage() {
     if (!user) {
       router.push('/auth/login')
       return
+    }
+    
+    await loadAgents()
+  }
+  
+  async function loadAgents() {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/agents')
+      if (response.ok) {
+        const data = await response.json()
+        // Transform API data to match Agent interface
+        const transformedAgents = data.agents.map((agent: any) => ({
+          id: agent.id,
+          name: agent.name,
+          description: agent.description || '',
+          category: agent.category,
+          icon: agent.icon || '🤖',
+          rating: agent.rating_avg || 0,
+          usageCount: agent.execution_count || 0,
+          isActive: true, // All public agents are active
+          tags: agent.tags || []
+        }))
+        setAgents(transformedAgents)
+      } else {
+        console.error('Failed to load agents')
+        // Fallback to mock data if API fails
+        setAgents(MOCK_AGENTS)
+      }
+    } catch (error) {
+      console.error('Error loading agents:', error)
+      // Fallback to mock data if API fails
+      setAgents(MOCK_AGENTS)
+    } finally {
+      setLoading(false)
     }
   }
   
