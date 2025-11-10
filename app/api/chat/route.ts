@@ -24,9 +24,11 @@ interface ChatRequestBody {
 }
 
 async function handlePOST(request: NextRequest) {
+  console.log('[Chat API] Received POST request');
   try {
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { user } } = await supabase.auth.getUser();
+    console.log('[Chat API] User:', user?.id || 'No user');
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -117,12 +119,14 @@ async function handlePOST(request: NextRequest) {
     }
 
     // Streaming response
+    console.log('[Chat API] Starting streaming response');
     const encoder = new TextEncoder();
     const responseStream = new ReadableStream({
       async start(controller) {
         try {
           let accumulatedContent = "";
 
+          console.log('[Chat API] Calling streamVanchinAPI');
           for await (const chunk of streamVanchinAPI({
             messages: fullMessages,
             model,
