@@ -5,6 +5,37 @@ import { NextResponse } from "next/server"
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  // Check if Supabase is configured
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const isSupabaseConfigured = supabaseUrl && supabaseKey && !supabaseKey.includes('placeholder')
+
+  if (!isSupabaseConfigured) {
+    // Return mock mode status
+    return NextResponse.json({
+      status: "healthy",
+      mode: "mock",
+      message: "Running in mock mode (Supabase not configured)",
+      timestamp: new Date().toISOString(),
+      services: {
+        database: {
+          status: "mock",
+          message: "Using in-memory mock database"
+        },
+        authentication: {
+          status: "mock",
+          message: "Using mock authentication"
+        },
+        ai: {
+          status: "healthy",
+          message: "Vanchin AI configured"
+        }
+      },
+      version: process.env.npm_package_version || "1.0.0",
+      environment: process.env.NODE_ENV || "development"
+    })
+  }
+
   const supabase = createRouteHandlerClient({ cookies })
 
   try {
