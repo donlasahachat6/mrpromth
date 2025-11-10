@@ -381,11 +381,15 @@ Respond in JSON format.`
 
     return await retryWithBackoff(
       async () => {
-        return agent3GenerateBackend(
-          this.state.projectPath,
-          expansion,
-          this.state.projectName
-        )
+        return agent3GenerateBackend({
+          projectId: this.state.id,
+          projectPath: this.state.projectPath,
+          task: {
+            type: 'api',
+            description: `Generate backend for ${this.state.projectName}`,
+            specifications: expansion.backend || {}
+          }
+        })
       },
       { maxRetries: 2 }
     )
@@ -409,11 +413,15 @@ Respond in JSON format.`
 
     return await retryWithBackoff(
       async () => {
-        return agent4GenerateFrontend(
-          this.state.projectPath,
-          expansion,
-          this.state.projectName
-        )
+        return agent4GenerateFrontend({
+          projectId: this.state.id,
+          projectPath: this.state.projectPath,
+          task: {
+            type: 'page',
+            description: `Generate frontend for ${this.state.projectName}`,
+            specifications: expansion.frontend || {}
+          }
+        })
       },
       { maxRetries: 2 }
     )
@@ -435,7 +443,15 @@ Respond in JSON format.`
 
     const { agent5TestingQA } = await import('../agents/agent5-testing-qa')
 
-    return await agent5TestingQA(this.state.projectPath, this.state.projectName)
+    return await agent5TestingQA({
+      projectId: this.state.id,
+      projectPath: this.state.projectPath,
+      task: {
+        type: 'full-qa',
+        testFramework: 'jest',
+        coverageThreshold: 80
+      }
+    })
   }
 
   /**
@@ -454,7 +470,15 @@ Respond in JSON format.`
 
     const { agent6Deploy } = await import('../agents/agent6-deployment')
 
-    return await agent6Deploy(this.state.projectPath, this.state.projectName)
+    return await agent6Deploy({
+      projectId: this.state.id,
+      projectPath: this.state.projectPath,
+      task: {
+        type: 'full-deployment',
+        platform: 'vercel',
+        environment: 'production'
+      }
+    })
   }
 
   /**
@@ -473,7 +497,16 @@ Respond in JSON format.`
 
     const { agent7Monitor } = await import('../agents/agent7-monitoring')
 
-    return await agent7Monitor(this.state.projectPath, this.state.projectName)
+    return await agent7Monitor({
+      projectId: this.state.id,
+      task: {
+        type: 'analytics',
+        data: {
+          projectPath: this.state.projectPath,
+          projectName: this.state.projectName
+        }
+      }
+    })
   }
 
   /**
@@ -552,10 +585,10 @@ Respond in JSON format.`
         project_name: this.state.projectName,
         status: this.state.status,
         progress: this.state.progress,
-        results: this.state.results,
-        errors: this.state.errors,
+        result: this.state.results,
+        error: this.state.errors.join(', ') || null,
         updated_at: this.state.updatedAt,
-      })
+      } as any)
 
       if (error) {
         console.error('[OptimizedWorkflow] Failed to save state:', error)
