@@ -59,25 +59,24 @@ export async function POST(request: NextRequest) {
     // Save user message to database
     const userMessage = messages[messages.length - 1];
     if (userMessage && userMessage.role === "user") {
-      await supabase.from("messages").insert({
+      await supabase.from("chat_messages").insert({
         session_id,
-        sender: "user",
+        user_id: user.id,
+        role: "user",
         content: userMessage.content,
+        mode,
       });
     }
 
-    // Log usage
-    await supabase.from("usage_logs").insert({
-      user_id: user.id,
-      session_id,
-      action_type: "chat_request",
-      resource_type: "chat",
-      metadata: {
-        mode,
-        model,
-        message_count: messages.length,
-      },
-    });
+    // Log usage (skip if usage_logs table doesn't exist)
+    // TODO: Create usage_logs table or use activity_logs
+    // await supabase.from("activity_logs").insert({
+    //   user_id: user.id,
+    //   action: "chat_request",
+    //   resource_type: "chat",
+    //   resource_id: session_id,
+    //   details: { mode, model, message_count: messages.length },
+    // });
 
     if (!enableStream) {
       // Non-streaming response
@@ -92,10 +91,12 @@ export async function POST(request: NextRequest) {
       const assistantMessage = response.choices[0]?.message?.content || "";
 
       // Save assistant message
-      await supabase.from("messages").insert({
+      await supabase.from("chat_messages").insert({
         session_id,
-        sender: "assistant",
+        user_id: user.id,
+        role: "assistant",
         content: assistantMessage,
+        mode,
       });
 
       return NextResponse.json({
@@ -134,10 +135,12 @@ export async function POST(request: NextRequest) {
 
           // Save complete assistant message
           if (accumulatedContent) {
-            await supabase.from("messages").insert({
+            await supabase.from("chat_messages").insert({
               session_id,
-              sender: "assistant",
+              user_id: user.id,
+              role: "assistant",
               content: accumulatedContent,
+              mode,
             });
           }
 
@@ -191,7 +194,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: messages, error } = await supabase
-      .from("messages")
+      .from("chat_messages")
       .select("*")
       .eq("session_id", session_id)
       .order("created_at", { ascending: true });
