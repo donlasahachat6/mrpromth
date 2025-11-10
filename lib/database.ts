@@ -1,57 +1,38 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'
+import { unifiedDb, isSupabaseConfigured } from './database/unified-db'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Use unified DB that supports both Supabase and mock mode
+export const supabase = isSupabaseConfigured() 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null as any; // Will use unifiedDb instead;
 
 export function createServiceRoleSupabaseClient() {
-  if (!supabaseUrl) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not configured');
+  if (!isSupabaseConfigured()) {
+    console.warn('Supabase not configured, using mock database');
+    return null as any; // Will use unifiedDb instead
   }
   if (!supabaseServiceRoleKey) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured');
+    console.warn('Service role key not configured');
+    return null as any;
   }
   return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
 
 // Chat Sessions
 export async function createChatSession(userId: string, title?: string) {
-  const { data, error } = await supabase
-    .from('chat_sessions')
-    .insert({
-      user_id: userId,
-      title: title || 'New Chat',
-      metadata: {}
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await unifiedDb.createChatSession(userId, title);
 }
 
 export async function getChatSessions(userId: string) {
-  const { data, error } = await supabase
-    .from('chat_sessions')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  return await unifiedDb.getChatSessions(userId);
 }
 
 export async function getChatSession(sessionId: string) {
-  const { data, error } = await supabase
-    .from('chat_sessions')
-    .select('*')
-    .eq('id', sessionId)
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await unifiedDb.getChatSession(sessionId);
 }
 
 export async function updateChatSession(sessionId: string, updates: { title?: string; metadata?: any }) {
@@ -82,30 +63,11 @@ export async function saveMessage(
   content: string,
   metadata?: any
 ) {
-  const { data, error } = await supabase
-    .from('messages')
-    .insert({
-      session_id: sessionId,
-      sender,
-      content,
-      metadata: metadata || {}
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await unifiedDb.createChatMessage(sessionId, sender, content);
 }
 
 export async function getMessages(sessionId: string) {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('session_id', sessionId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-  return data;
+  return await unifiedDb.getChatMessages(sessionId);
 }
 
 // Prompts

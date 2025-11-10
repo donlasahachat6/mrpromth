@@ -18,7 +18,7 @@ export async function GET(
 
   try {
     const sessions = await getChatSessions(user.id);
-    const session = sessions.find(s => s.id === params.session_id);
+    const session = sessions.find((s: any) => s.id === params.session_id);
 
     if (!session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
