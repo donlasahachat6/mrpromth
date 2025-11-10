@@ -41,8 +41,8 @@ class VanchinLoadBalancer {
       }
 
       keys.push({
-        apiKey,
-        endpoint,
+        apiKey: apiKey.trim(),
+        endpoint: endpoint.trim(),
         index,
         isHealthy: true,
         lastUsed: 0,

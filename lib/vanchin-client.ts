@@ -5,7 +5,7 @@
 
 import { getVanchinLoadBalancer } from './vanchin-load-balancer';
 
-const VANCHIN_BASE_URL = process.env.VANCHIN_BASE_URL || 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints';
+const VANCHIN_BASE_URL = (process.env.VANCHIN_BASE_URL || 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints').trim();
 
 export interface VanchinChatMessage {
   role: 'system' | 'user' | 'assistant';
