@@ -291,9 +291,10 @@ export default function EnhancedChatPage({ params }: ChatPageProps) {
                 <div className="prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      code({ node, inline, className, children, ...props }) {
+                      code({ node, className, children, ...props }: any) {
                         const match = /language-(\w+)/.exec(className || "");
                         const codeString = String(children).replace(/\n$/, "");
+                        const inline = props.inline;
                         
                         return !inline && match ? (
                           <div className="relative group">

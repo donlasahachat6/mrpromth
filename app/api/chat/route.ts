@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: ChatRequestBody = await request.json();
-    const { session_id, messages, mode = "chat", agent_id = "auto", stream = true } = body;
+    const { session_id, messages, mode = "chat", agent_id = "auto", stream: enableStream = true } = body;
 
     // Add system prompt based on mode
     const systemPrompts = {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!stream) {
+    if (!enableStream) {
       // Non-streaming response
       const response = await vanchinLoadBalancer.call(fullMessages, {
         model: "gpt-4o-mini",
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     // Streaming response
     const encoder = new TextEncoder();
-    const stream = new ReadableStream({
+    const responseStream = new ReadableStream({
       async start(controller) {
         try {
           const response = await vanchinLoadBalancer.call(fullMessages, {
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return new NextResponse(stream, {
+    return new NextResponse(responseStream, {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
