@@ -58,7 +58,7 @@ export async function callVanchinAPI(
     }
 
     try {
-      const url = `${VANCHIN_BASE_URL}/${key.endpoint}/chat/completions`;
+      const url = `${VANCHIN_BASE_URL}/chat/completions`;
       
       const response = await fetch(url, {
         method: 'POST',
@@ -68,7 +68,7 @@ export async function callVanchinAPI(
         },
         body: JSON.stringify({
           ...request,
-          model: request.model || 'gpt-4o-mini',
+          model: key.endpoint,
         }),
       });
 
@@ -115,7 +115,7 @@ export async function* streamVanchinAPI(
   }
 
   try {
-    const url = `${VANCHIN_BASE_URL}/${key.endpoint}/chat/completions`;
+    const url = `${VANCHIN_BASE_URL}/chat/completions`;
     
     const response = await fetch(url, {
       method: 'POST',
@@ -125,7 +125,7 @@ export async function* streamVanchinAPI(
       },
       body: JSON.stringify({
         ...request,
-        model: request.model || 'gpt-4o-mini',
+        model: key.endpoint,
         stream: true,
       }),
     });
