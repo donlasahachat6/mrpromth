@@ -18,7 +18,8 @@ export async function GET() {
     }
 
     // Test Vanchin API call
-    const response = await fetch(baseUrl, {
+    const url = `${baseUrl}/chat/completions`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -40,6 +41,7 @@ export async function GET() {
       success: response.ok,
       status: response.status,
       statusText: response.statusText,
+      url,
       baseUrl,
       endpoint,
       responsePreview: responseText.substring(0, 500),
