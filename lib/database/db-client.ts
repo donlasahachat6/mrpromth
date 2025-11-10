@@ -86,9 +86,9 @@ export class DatabaseClient {
     }
 
     try {
-      const { data: result, error } = await this.supabase!
+      const { data: result, error } = await (this.supabase as any)
         .from(table)
-        .insert(data as any)
+        .insert(data)
         .select()
 
       return { data: result as T[], error }
@@ -111,11 +111,11 @@ export class DatabaseClient {
     }
 
     try {
-      let query = this.supabase!.from(table).update(data as any)
+      let query = (this.supabase as any).from(table).update(data)
 
       // Apply match conditions
       for (const [key, value] of Object.entries(match)) {
-        query = query.eq(key, value) as any
+        query = query.eq(key, value)
       }
 
       const { data: result, error } = await query.select()
@@ -136,9 +136,9 @@ export class DatabaseClient {
     }
 
     try {
-      const { data: result, error } = await this.supabase!
+      const { data: result, error } = await (this.supabase as any)
         .from(table)
-        .upsert(data as any)
+        .upsert(data)
         .select()
 
       return { data: result as T[], error }
@@ -165,12 +165,12 @@ export class DatabaseClient {
     }
 
     try {
-      let query = this.supabase!.from(table).select(options?.columns || '*')
+      let query = (this.supabase as any).from(table).select(options?.columns || '*')
 
       // Apply match conditions
       if (options?.match) {
         for (const [key, value] of Object.entries(options.match)) {
-          query = query.eq(key, value) as any
+          query = query.eq(key, value)
         }
       }
 
@@ -178,12 +178,12 @@ export class DatabaseClient {
       if (options?.order) {
         query = query.order(options.order.column, {
           ascending: options.order.ascending ?? true,
-        }) as any
+        })
       }
 
       // Apply limit
       if (options?.limit) {
-        query = query.limit(options.limit) as any
+        query = query.limit(options.limit)
       }
 
       const { data, error } = await query
@@ -207,11 +207,11 @@ export class DatabaseClient {
     }
 
     try {
-      let query = this.supabase!.from(table).delete()
+      let query = (this.supabase as any).from(table).delete()
 
       // Apply match conditions
       for (const [key, value] of Object.entries(match)) {
-        query = query.eq(key, value) as any
+        query = query.eq(key, value)
       }
 
       const { data, error } = await query
