@@ -1,6 +1,7 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { getLoadBalancerStats } from "@/lib/vanchin-client"
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,8 @@ export async function GET() {
         },
         ai: {
           status: "healthy",
-          message: "Vanchin AI configured"
+          message: "Vanchin AI configured",
+          ...getLoadBalancerStats()
         }
       },
       version: process.env.npm_package_version || "1.0.0",
@@ -106,6 +108,10 @@ export async function GET() {
         },
         storage: {
           status: storageStatus
+        },
+        vanchin_ai: {
+          status: "healthy",
+          ...getLoadBalancerStats()
         }
       },
       version: process.env.npm_package_version || "1.0.0",

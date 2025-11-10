@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { vanchinLoadBalancer } from "@/lib/ai/vanchin-load-balancer";
+import { callVanchinAPI, streamVanchinAPI } from "@/lib/vanchin-client";
 
 export const dynamic = 'force-dynamic';
 export const runtime = "nodejs";
@@ -15,8 +15,10 @@ interface ChatRequestBody {
   session_id: string;
   messages: ChatMessage[];
   mode?: "chat" | "code" | "project" | "debug";
-  agent_id?: string;
   stream?: boolean;
+  model?: string;
+  temperature?: number;
+  max_tokens?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -29,14 +31,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body: ChatRequestBody = await request.json();
-    const { session_id, messages, mode = "chat", agent_id = "auto", stream: enableStream = true } = body;
+    const { 
+      session_id, 
+      messages, 
+      mode = "chat", 
+      stream: enableStream = true,
+      model = "gpt-4o-mini",
+      temperature = 0.7,
+      max_tokens = 2000
+    } = body;
 
     // Add system prompt based on mode
     const systemPrompts = {
-      chat: "You are Mr.Prompt, a helpful AI assistant. Provide clear, concise, and accurate responses.",
-      code: "You are an expert code assistant. Provide clean, well-documented code with explanations. Use markdown code blocks with language tags.",
-      project: "You are a full-stack project architect. Design complete, production-ready solutions with detailed specifications.",
-      debug: "You are a debugging expert. Analyze errors carefully and provide step-by-step solutions.",
+      chat: "You are Mr.Prompt, a helpful AI assistant. Provide clear, concise, and accurate responses in Thai language.",
+      code: "You are an expert code assistant. Provide clean, well-documented code with explanations. Use markdown code blocks with language tags. Respond in Thai language.",
+      project: "You are a full-stack project architect. Design complete, production-ready solutions with detailed specifications. Respond in Thai language.",
+      debug: "You are a debugging expert. Analyze errors carefully and provide step-by-step solutions. Respond in Thai language.",
     };
 
     const systemMessage: ChatMessage = {
@@ -49,42 +59,49 @@ export async function POST(request: NextRequest) {
     // Save user message to database
     const userMessage = messages[messages.length - 1];
     if (userMessage && userMessage.role === "user") {
-      await supabase.from("chat_messages").insert({
+      await supabase.from("messages").insert({
         session_id,
-        user_id: user.id,
-        role: "user",
+        sender: "user",
         content: userMessage.content,
-        mode,
-        agent_id,
       });
     }
 
+    // Log usage
+    await supabase.from("usage_logs").insert({
+      user_id: user.id,
+      session_id,
+      action_type: "chat_request",
+      resource_type: "chat",
+      metadata: {
+        mode,
+        model,
+        message_count: messages.length,
+      },
+    });
+
     if (!enableStream) {
       // Non-streaming response
-      const response = await vanchinLoadBalancer.call(fullMessages, {
-        model: "gpt-4o-mini",
-        temperature: 0.7,
-        maxTokens: 2000,
+      const response = await callVanchinAPI({
+        messages: fullMessages,
+        model,
+        temperature,
+        max_tokens,
         stream: false,
       });
 
-      const data = await response.json();
-      const assistantMessage = data.choices[0]?.message?.content || "";
+      const assistantMessage = response.choices[0]?.message?.content || "";
 
       // Save assistant message
-      await supabase.from("chat_messages").insert({
+      await supabase.from("messages").insert({
         session_id,
-        user_id: user.id,
-        role: "assistant",
+        sender: "assistant",
         content: assistantMessage,
-        mode,
-        agent_id,
       });
 
       return NextResponse.json({
         message: assistantMessage,
-        agent_id,
         mode,
+        usage: response.usage,
       });
     }
 
@@ -93,66 +110,34 @@ export async function POST(request: NextRequest) {
     const responseStream = new ReadableStream({
       async start(controller) {
         try {
-          const response = await vanchinLoadBalancer.call(fullMessages, {
-            model: "gpt-4o-mini",
-            temperature: 0.7,
-            maxTokens: 2000,
-            stream: true,
-          });
-
-          if (!response.body) {
-            throw new Error("No response body");
-          }
-
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
           let accumulatedContent = "";
 
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n").filter(line => line.trim() !== "");
-
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const data = line.slice(6);
-                if (data === "[DONE]") {
-                  controller.enqueue(
-                    encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
-                  );
-                  continue;
-                }
-
-                try {
-                  const parsed = JSON.parse(data);
-                  const content = parsed.choices[0]?.delta?.content;
-
-                  if (content) {
-                    accumulatedContent += content;
-                    controller.enqueue(
-                      encoder.encode(
-                        `data: ${JSON.stringify({ type: "chunk", content })}\n\n`
-                      )
-                    );
-                  }
-                } catch (e) {
-                  console.warn("Failed to parse SSE chunk:", e);
-                }
-              }
-            }
+          for await (const chunk of streamVanchinAPI({
+            messages: fullMessages,
+            model,
+            temperature,
+            max_tokens,
+            stream: true,
+          })) {
+            accumulatedContent += chunk;
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "chunk", content: chunk })}\n\n`
+              )
+            );
           }
+
+          // Send done signal
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
+          );
 
           // Save complete assistant message
           if (accumulatedContent) {
-            await supabase.from("chat_messages").insert({
+            await supabase.from("messages").insert({
               session_id,
-              user_id: user.id,
-              role: "assistant",
+              sender: "assistant",
               content: accumulatedContent,
-              mode,
-              agent_id,
             });
           }
 
@@ -206,10 +191,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: messages, error } = await supabase
-      .from("chat_messages")
+      .from("messages")
       .select("*")
       .eq("session_id", session_id)
-      .eq("user_id", user.id)
       .order("created_at", { ascending: true });
 
     if (error) {

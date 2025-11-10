@@ -298,8 +298,24 @@ export async function extractColors(imagePath: string, count: number = 5): Promi
     .raw()
     .toBuffer({ resolveWithObject: true });
   
-  // Simple color extraction (this is a basic implementation)
-  // For production, consider using a library like 'node-vibrant'
-  // TODO: Implement actual color extraction from pixel data
-  return ['#000000']; // Placeholder
+  // Simple color extraction using pixel sampling
+  const colors: Map<string, number> = new Map();
+  const channels = info.channels || 3;
+  
+  // Sample pixels and count color occurrences
+  for (let i = 0; i < data.length; i += channels * 10) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    
+    // Convert to hex
+    const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    colors.set(hex, (colors.get(hex) || 0) + 1);
+  }
+  
+  // Sort by frequency and return top N colors
+  return Array.from(colors.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, count)
+    .map(([color]) => color);
 }
