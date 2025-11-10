@@ -4,6 +4,7 @@
  */
 
 import { vanchinChatCompletion } from './vanchin-client';
+import { ENV } from '../env'
 
 export interface ModificationRequest {
   projectId: string;
@@ -116,8 +117,8 @@ export async function applyModifications(
   try {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      ENV.SUPABASE_URL,
+      ENV.SUPABASE_ANON_KEY
     );
 
     let filesModified = 0;

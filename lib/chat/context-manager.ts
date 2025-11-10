@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { ENV } from '../env'
 
 export interface ChatContext {
   userId: string;
@@ -25,8 +26,8 @@ export async function getChatContext(
   sessionId: string
 ): Promise<ChatContext> {
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY
   );
 
   // Get user's most recent project
@@ -70,8 +71,8 @@ export async function setActiveProject(
   projectId: string
 ): Promise<void> {
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY
   );
 
   await supabase

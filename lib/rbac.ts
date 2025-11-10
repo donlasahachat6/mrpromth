@@ -6,6 +6,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { ENV } from '../env'
 
 export type UserRole = 'user' | 'admin' | 'moderator'
 
@@ -26,8 +27,8 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const cookieStore = cookies()
   
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
@@ -80,8 +81,8 @@ export async function requireAuth(request: NextRequest): Promise<NextResponse | 
   const response = NextResponse.next()
   
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
@@ -116,8 +117,8 @@ export async function requireRole(
   const response = NextResponse.next()
   
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
@@ -169,8 +170,8 @@ export async function requireAuthAPI(request: NextRequest): Promise<{
   profile?: UserProfile
 }> {
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
@@ -264,8 +265,8 @@ export async function logActivity(params: {
   const cookieStore = cookies()
   
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {

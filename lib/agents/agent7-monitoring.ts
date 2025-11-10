@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { ENV } from '../env'
 
 export interface Agent7Request {
   projectId: string
@@ -108,8 +109,8 @@ async function logError(
   result: Agent7Result
 ): Promise<void> {
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_SERVICE_ROLE_KEY
   )
   
   const { data, error } = await supabase
@@ -138,8 +139,8 @@ async function logEvent(
   result: Agent7Result
 ): Promise<void> {
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_SERVICE_ROLE_KEY
   )
   
   const { data, error } = await supabase
@@ -167,8 +168,8 @@ async function getMetrics(
   result: Agent7Result
 ): Promise<void> {
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_SERVICE_ROLE_KEY
   )
   
   // Get error metrics
@@ -252,8 +253,8 @@ async function healthCheck(
   // Check database
   try {
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      ENV.SUPABASE_URL,
+      ENV.SUPABASE_SERVICE_ROLE_KEY
     )
     
     const { error } = await supabase.from('profiles').select('id').limit(1)
@@ -264,7 +265,7 @@ async function healthCheck(
   
   // Check API
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`)
+    const response = await fetch(`${ENV.SUPABASE_URL}/rest/v1/`)
     checks.api = response.ok
   } catch (error) {
     checks.api = false
@@ -273,8 +274,8 @@ async function healthCheck(
   // Check auth
   try {
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      ENV.SUPABASE_URL,
+      ENV.SUPABASE_SERVICE_ROLE_KEY
     )
     
     const { error } = await supabase.auth.getSession()
@@ -312,8 +313,8 @@ async function getAnalytics(
   result: Agent7Result
 ): Promise<void> {
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_SERVICE_ROLE_KEY
   )
   
   const timeRange = request.task.timeRange || {
@@ -373,8 +374,8 @@ export async function setupMonitoringAlerts(
   
   // For now, we'll log to database
   const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    ENV.SUPABASE_URL,
+    ENV.SUPABASE_SERVICE_ROLE_KEY
   )
   
   await supabase.from('logs').insert({

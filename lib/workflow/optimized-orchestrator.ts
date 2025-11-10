@@ -9,6 +9,7 @@ import { ProjectManager } from '../file-manager/project-manager'
 import { executeWithSmartSelection, modelSelector } from '../ai/smart-model-selector'
 import { performanceMonitor } from '../utils/performance-monitor'
 import { ErrorFactory, retryWithBackoff, withTimeout } from '../utils/error-handler'
+import { ENV } from '../env'
 
 export interface WorkflowRequest {
   userId: string
@@ -88,8 +89,8 @@ export class OptimizedWorkflowOrchestrator {
     }
 
     this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      ENV.SUPABASE_URL,
+      ENV.SUPABASE_SERVICE_ROLE_KEY
     )
   }
 

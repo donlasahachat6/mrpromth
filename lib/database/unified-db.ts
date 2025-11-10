@@ -5,21 +5,19 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../database.types'
+import { ENV } from '../env'
 
 /**
  * Check if Supabase is properly configured
  */
 export function isSupabaseConfigured(): boolean {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
+  if (!ENV.isSupabaseConfigured()) {
     // During build time, return false instead of throwing
-    if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+    if (ENV.isBuildTime()) {
       console.warn('⚠️ Supabase credentials not found during build');
       return false;
     }
-    throw new Error('Supabase credentials are required. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.')
+    throw new Error('Supabase credentials are required. Please set SUPABASE_URL and SUPABASE_ANON_KEY in your environment variables.')
   }
 
   return true
@@ -39,60 +37,30 @@ export function createUnifiedDatabase() {
   const configured = isSupabaseConfigured();
   
   // During build time, return a placeholder client
-  if (!configured && process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+  if (!configured && ENV.isBuildTime()) {
     console.warn('⚠️ Creating placeholder Supabase client for build');
     return createClient<Database>('https://placeholder.supabase.co', 'placeholder-anon-key');
   }
   
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const { url, anonKey } = ENV.getSupabaseConfig();
 
-  console.log('[Database] Using Supabase:', supabaseUrl)
-  return createClient<Database>(supabaseUrl, supabaseKey)
+  console.log('[Database] Using Supabase:', url)
+
+  return createClient<Database>(url, anonKey)
 }
 
 /**
- * Export unified database instance
+ * Unified database instance
  */
-export const db = createUnifiedDatabase()
+const supabase = createUnifiedDatabase()
 
 /**
- * Database operations wrapper
- * Provides consistent API for Supabase operations
+ * Unified Database API
  */
-export class UnifiedDatabase {
-  private client: any
-
-  constructor() {
-    this.client = createUnifiedDatabase()
-  }
-
-  /**
-   * Get database mode
-   */
-  getMode(): 'supabase' {
-    return 'supabase'
-  }
-
-  /**
-   * Check if using mock (always false now)
-   */
-  isMock(): boolean {
-    return false
-  }
-
-  /**
-   * Get raw client
-   */
-  getClient() {
-    return this.client
-  }
-
-  /**
-   * Chat Sessions
-   */
+export const unifiedDb = {
+  // Chat Sessions
   async createChatSession(userId: string, title?: string) {
-    const { data, error } = await this.client
+    const { data, error } = await supabase
       .from('chat_sessions')
       .insert({
         user_id: userId,
@@ -104,21 +72,21 @@ export class UnifiedDatabase {
 
     if (error) throw error
     return data
-  }
+  },
 
   async getChatSessions(userId: string) {
-    const { data, error } = await this.client
+    const { data, error } = await supabase
       .from('chat_sessions')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
 
     if (error) throw error
-    return data || []
-  }
+    return data
+  },
 
   async getChatSession(sessionId: string) {
-    const { data, error } = await this.client
+    const { data, error } = await supabase
       .from('chat_sessions')
       .select('*')
       .eq('id', sessionId)
@@ -126,81 +94,91 @@ export class UnifiedDatabase {
 
     if (error) throw error
     return data
-  }
+  },
 
-  /**
-   * Chat Messages
-   */
-  async createChatMessage(sessionId: string, role: string, content: string) {
-    const { data, error } = await this.client
+  // Chat Messages
+  async createChatMessage(
+    sessionId: string,
+    sender: 'user' | 'assistant' | 'system',
+    content: string
+  ) {
+    const { data, error } = await supabase
       .from('chat_messages')
       .insert({
         session_id: sessionId,
-        role,
+        sender,
         content,
+        metadata: {},
       })
       .select()
       .single()
 
     if (error) throw error
     return data
-  }
+  },
 
   async getChatMessages(sessionId: string) {
-    const { data, error } = await this.client
+    const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true })
 
     if (error) throw error
-    return data || []
-  }
+    return data
+  },
 
-  /**
-   * Workflows
-   */
-  async createWorkflow(userId: string, projectName: string, prompt: string) {
-    const { data, error } = await this.client
-      .from('workflows')
+  // Projects
+  async createProject(userId: string, name: string, userPrompt: string) {
+    const { data, error } = await supabase
+      .from('projects')
       .insert({
         user_id: userId,
-        project_name: projectName,
-        prompt,
+        name,
+        user_prompt: userPrompt,
         status: 'pending',
+        agent_outputs: {},
       })
       .select()
       .single()
 
     if (error) throw error
     return data
-  }
+  },
 
-  async updateWorkflow(workflowId: string, updates: any) {
-    const { data, error } = await this.client
-      .from('workflows')
+  async getProjects(userId: string) {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data
+  },
+
+  async getProject(projectId: string) {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  async updateProject(projectId: string, updates: any) {
+    const { data, error } = await supabase
+      .from('projects')
       .update(updates)
-      .eq('id', workflowId)
+      .eq('id', projectId)
       .select()
       .single()
 
     if (error) throw error
     return data
-  }
-
-  async getWorkflow(workflowId: string) {
-    const { data, error } = await this.client
-      .from('workflows')
-      .select('*')
-      .eq('id', workflowId)
-      .single()
-
-    if (error) throw error
-    return data
-  }
+  },
 }
 
-/**
- * Export unified database instance
- */
-export const unifiedDb = new UnifiedDatabase()
+export default unifiedDb

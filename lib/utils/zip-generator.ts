@@ -8,6 +8,7 @@ import { createWriteStream, createReadStream } from 'fs'
 import { readdir, stat, mkdir } from 'fs/promises'
 import { join, relative } from 'path'
 import { createClient } from '@supabase/supabase-js'
+import { ENV } from '../env'
 
 export interface ZipOptions {
   projectPath: string
@@ -269,8 +270,8 @@ export async function uploadZipToStorage(
 ): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      ENV.SUPABASE_URL,
+      ENV.SUPABASE_SERVICE_ROLE_KEY
     )
     
     // Read file

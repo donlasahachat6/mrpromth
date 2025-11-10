@@ -9,6 +9,7 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../database.types'
+import { ENV } from '../env'
 
 const execAsync = promisify(exec)
 
@@ -44,8 +45,8 @@ export class ProjectManager {
   
   constructor() {
     this.supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      ENV.SUPABASE_URL,
+      ENV.SUPABASE_SERVICE_ROLE_KEY
     )
     this.baseProjectPath = '/tmp/projects'
   }

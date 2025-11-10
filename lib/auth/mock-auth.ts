@@ -164,8 +164,8 @@ export const mockAuth = new MockAuthService()
  * Check if should use mock auth
  */
 export function shouldUseMockAuth(): boolean {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = ENV.SUPABASE_URL
+  const supabaseKey = ENV.SUPABASE_ANON_KEY
 
   return !supabaseUrl || !supabaseKey || supabaseKey.includes('placeholder')
 }
