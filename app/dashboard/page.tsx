@@ -224,7 +224,7 @@ export default function DashboardPage() {
           {/* Quick Actions */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">⚡ Quick Actions</h2>
+              <h2 className="text-lg font-semibold text-gray-900"> Quick Actions</h2>
             </div>
             <div className="p-6 space-y-3">
               <Link
@@ -292,7 +292,7 @@ export default function DashboardPage() {
           {/* Recent Activity */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">📊 Recent Activity</h2>
+              <h2 className="text-lg font-semibold text-gray-900"> Recent Activity</h2>
             </div>
             <div className="p-6">
               {recentActivity.length === 0 ? (

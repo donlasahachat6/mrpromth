@@ -185,7 +185,7 @@ export function CodeReviewPanel({ projectId, files }: CodeReviewPanelProps) {
                     </div>
                     {issue.suggestion && (
                       <div className="mt-2 text-sm bg-gray-800 rounded p-2">
-                        <span className="text-green-400">💡 Suggestion:</span> {issue.suggestion}
+                        <span className="text-green-400"> Suggestion:</span> {issue.suggestion}
                       </div>
                     )}
                   </div>

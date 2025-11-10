@@ -44,13 +44,13 @@ interface ChatPageProps {
 
 const AGENTS = [
   { id: "auto", name: "🤖 Auto Select", nameEn: "Auto Select", nameTh: "เลือกอัตโนมัติ", color: "bg-blue-500" },
-  { id: "agent1", name: "📝 Prompt Expander", nameEn: "Prompt Expander", nameTh: "ขยายโปรมต์", color: "bg-purple-500" },
+  { id: "agent1", name: " Prompt Expander", nameEn: "Prompt Expander", nameTh: "ขยายโปรมต์", color: "bg-purple-500" },
   { id: "agent2", name: "🏗️ Architecture Designer", nameEn: "Architecture Designer", nameTh: "ออกแบบสถาปัตยกรรม", color: "bg-green-500" },
   { id: "agent3", name: "💾 Backend Developer", nameEn: "Backend Developer", nameTh: "พัฒนา Backend", color: "bg-orange-500" },
-  { id: "agent4", name: "🎨 Frontend Developer", nameEn: "Frontend Developer", nameTh: "พัฒนา Frontend", color: "bg-pink-500" },
+  { id: "agent4", name: " Frontend Developer", nameEn: "Frontend Developer", nameTh: "พัฒนา Frontend", color: "bg-pink-500" },
   { id: "agent5", name: "🔗 Integration Developer", nameEn: "Integration Developer", nameTh: "พัฒนาการเชื่อมต่อ", color: "bg-cyan-500" },
   { id: "agent6", name: "✅ QA Engineer", nameEn: "QA Engineer", nameTh: "วิศวกร QA", color: "bg-yellow-500" },
-  { id: "agent7", name: "⚡ Optimization Expert", nameEn: "Optimization Expert", nameTh: "ผู้เชี่ยวชาญเพิ่มประสิทธิภาพ", color: "bg-red-500" },
+  { id: "agent7", name: " Optimization Expert", nameEn: "Optimization Expert", nameTh: "ผู้เชี่ยวชาญเพิ่มประสิทธิภาพ", color: "bg-red-500" },
 ];
 
 export default function CodexStyleChatPage({ params }: ChatPageProps) {

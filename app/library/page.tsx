@@ -54,7 +54,7 @@ export default function PromptLibraryPage() {
     { id: "content", name: "Content Creation", icon: "✍️" },
     { id: "code", name: "Code Generation", icon: "💻" },
     { id: "business", name: "Business", icon: "💼" },
-    { id: "data", name: "Data Analysis", icon: "📊" },
+    { id: "data", name: "Data Analysis", icon: "" },
     { id: "education", name: "Education", icon: "🎓" },
   ];
 

@@ -12,7 +12,7 @@ import { PreferencesTab } from './preferences-tab';
 const tabs = [
   { id: 'api-keys', name: 'API Keys', icon: '🔑' },
   { id: 'profile', name: 'Profile', icon: '👤' },
-  { id: 'preferences', name: 'Preferences', icon: '⚙️' },
+  { id: 'preferences', name: 'Preferences', icon: '' },
 ];
 
 export default function SettingsPage() {

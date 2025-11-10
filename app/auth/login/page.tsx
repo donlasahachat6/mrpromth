@@ -93,7 +93,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            🚀 เข้าสู่ระบบ MR.Promth
+            เข้าสู่ระบบ MR.Promth
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             AI Agent สร้างโค้ดอัตโนมัติด้วย 19 AI Models

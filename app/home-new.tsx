@@ -38,7 +38,7 @@ export default function HomePage() {
         </h2>
         <div className="grid md:grid-cols-3 gap-8">
           <FeatureCard
-            icon="🎯"
+            icon=""
             title="One-Click Execution"
             description="ไม่ต้องเขียน Prompt เอง - เลือก Template กรอกตัวแปร คลิกเดียวเสร็จ"
           />
@@ -48,7 +48,7 @@ export default function HomePage() {
             description="Prompts สำเร็จรูปครบทุกหมวด: Content, Code, Business, Data Analysis"
           />
           <FeatureCard
-            icon="⚡"
+            icon=""
             title="20+ AI Agents"
             description="Multi-step Agents ที่ทำงานซับซ้อนได้อัตโนมัติ - Blog Writer, Code Generator, Market Analyst"
           />

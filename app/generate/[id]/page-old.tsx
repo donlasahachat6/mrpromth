@@ -27,7 +27,7 @@ const STEP_NAMES = [
   'Setting up Monitoring'
 ]
 
-const STEP_ICONS = ['🚀', '🔍', '📝', '⚙️', '🎨', '🧪', '🚢', '📊']
+const STEP_ICONS = ['', '🔍', '', '', '', '🧪', '🚢', '']
 
 export default function WorkflowStatusPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -222,7 +222,7 @@ export default function WorkflowStatusPage({ params }: { params: { id: string } 
             {/* Status Message */}
             <div className="mt-8 p-4 rounded-lg bg-gray-100 dark:bg-gray-700">
               <p className="text-center text-gray-700 dark:text-gray-300">
-                {isCompleted && '🎉 Workflow completed successfully!'}
+                {isCompleted && ' Workflow completed successfully!'}
                 {isFailed && '❌ Workflow failed. Check errors below.'}
                 {isInProgress && `⏳ ${STEP_NAMES[workflow.currentStep - 1] || 'Processing'}...`}
               </p>
