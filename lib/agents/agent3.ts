@@ -12,9 +12,16 @@
 import type { Agent2Output } from './types'
 import { OpenAI } from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+// Lazy initialization to avoid build-time errors
+let openai: OpenAI | null = null
+function getOpenAI() {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build'
+    })
+  }
+  return openai
+}
 
 export interface DatabaseTable {
   name: string
@@ -146,7 +153,7 @@ Requirements:
 
 Return only the SQL code, no explanations.`
 
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: 'gpt-4.1-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3
@@ -239,7 +246,7 @@ Requirements:
 
 Return only the TypeScript code, no explanations.`
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4.1-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3
@@ -275,7 +282,7 @@ Generate the following functions:
 
 Return only the SQL code, no explanations.`
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4.1-mini',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.3
@@ -326,7 +333,7 @@ If the table doesn't have user_id, create public read policies.
 
 Return only the SQL code, no explanations.`
 
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: 'gpt-4.1-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3
