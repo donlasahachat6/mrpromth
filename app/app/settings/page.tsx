@@ -10,8 +10,8 @@ import { ProfileTab } from './profile-tab';
 import { PreferencesTab } from './preferences-tab';
 
 const tabs = [
-  { id: 'api-keys', name: 'API Keys', icon: '🔑' },
-  { id: 'profile', name: 'Profile', icon: '👤' },
+  { id: 'api-keys', name: 'API Keys', icon: '' },
+  { id: 'profile', name: 'Profile', icon: '' },
   { id: 'preferences', name: 'Preferences', icon: '' },
 ];
 

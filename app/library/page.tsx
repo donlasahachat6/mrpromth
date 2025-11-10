@@ -50,12 +50,12 @@ export default function PromptLibraryPage() {
   );
 
   const categories = [
-    { id: "all", name: "All", icon: "📚" },
+    { id: "all", name: "All", icon: "" },
     { id: "content", name: "Content Creation", icon: "✍️" },
-    { id: "code", name: "Code Generation", icon: "💻" },
-    { id: "business", name: "Business", icon: "💼" },
+    { id: "code", name: "Code Generation", icon: "Code" },
+    { id: "business", name: "Business", icon: "" },
     { id: "data", name: "Data Analysis", icon: "" },
-    { id: "education", name: "Education", icon: "🎓" },
+    { id: "education", name: "Education", icon: "" },
   ];
 
   return (

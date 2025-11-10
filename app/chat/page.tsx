@@ -561,7 +561,7 @@ export default function ChatPage() {
           
           {dragActive && (
             <div className="mt-2 text-sm text-indigo-600 text-center font-medium">
-              📎 วางไฟล์ที่นี่เพื่ออัพโหลด
+              วางไฟล์ที่นี่เพื่ออัพโหลด
             </div>
           )}
         </div>

@@ -196,7 +196,7 @@ export default function PromptDetailPage() {
                     variant="outline"
                     onClick={() => navigator.clipboard.writeText(result)}
                   >
-                    📋 Copy
+                    Copy
                   </Button>
                   <Button
                     variant="outline"
@@ -209,7 +209,7 @@ export default function PromptDetailPage() {
                       a.click();
                     }}
                   >
-                    💾 Download
+                    Download
                   </Button>
                 </div>
               </div>

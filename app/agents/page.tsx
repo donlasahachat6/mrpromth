@@ -35,7 +35,7 @@ const MOCK_AGENTS: Agent[] = [
     name: 'Code Generator',
     description: 'Generate production-ready code in multiple languages with best practices',
     category: 'Code Generation',
-    icon: '💻',
+    icon: 'Code2',
     rating: 4.8,
     usageCount: 1250,
     isActive: true,
@@ -57,7 +57,7 @@ const MOCK_AGENTS: Agent[] = [
     name: 'Code Reviewer',
     description: 'Analyze code quality, security, and suggest improvements',
     category: 'Analysis',
-    icon: '🔍',
+    icon: 'Search',
     rating: 4.9,
     usageCount: 2100,
     isActive: true,
@@ -90,7 +90,7 @@ const MOCK_AGENTS: Agent[] = [
     name: 'Test Generator',
     description: 'Create comprehensive unit and integration tests',
     category: 'Testing',
-    icon: '🧪',
+    icon: 'FlaskConical',
     rating: 4.4,
     usageCount: 650,
     isActive: false,
@@ -101,7 +101,7 @@ const MOCK_AGENTS: Agent[] = [
     name: 'API Builder',
     description: 'Design and implement RESTful APIs with documentation',
     category: 'Code Generation',
-    icon: '🔌',
+    icon: 'Plug',
     rating: 4.8,
     usageCount: 1100,
     isActive: true,
@@ -151,7 +151,7 @@ export default function AgentsPage() {
           name: agent.name,
           description: agent.description || '',
           category: agent.category,
-          icon: agent.icon || '🤖',
+          icon: agent.icon || 'Bot',
           rating: agent.rating_avg || 0,
           usageCount: agent.execution_count || 0,
           isActive: true, // All public agents are active
@@ -232,7 +232,7 @@ export default function AgentsPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-4xl font-bold">🤖 Agent Marketplace</h1>
+          <h1 className="text-4xl font-bold">Agent Marketplace</h1>
           <p className="mt-2 text-lg text-indigo-100">
             Discover and activate AI agents to supercharge your workflow
           </p>

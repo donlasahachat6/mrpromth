@@ -170,7 +170,7 @@ export default function GeneratePage() {
             </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-              <div className="text-3xl mb-3">🤖</div>
+              <div className="text-3xl mb-3"></div>
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                 AI Powered
               </h3>

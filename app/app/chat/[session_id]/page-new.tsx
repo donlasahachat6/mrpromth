@@ -37,18 +37,18 @@ type ChatMode = "chat" | "code" | "project" | "debug";
 
 const MODES = [
   { id: "chat" as ChatMode, name: " Chat", icon: MessageSquare, desc: "General conversation" },
-  { id: "code" as ChatMode, name: "💻 Code", icon: Code, desc: "Code generation & review" },
+  { id: "code" as ChatMode, name: "Code", icon: Code, desc: "Code generation & review" },
   { id: "project" as ChatMode, name: " Project", icon: Rocket, desc: "Full project generation" },
   { id: "debug" as ChatMode, name: " Debug", icon: Bug, desc: "Error analysis & fixing" },
 ];
 
 const AGENTS = [
-  { id: "auto", name: "🤖 Auto Select", desc: "AI chooses best agent" },
+  { id: "auto", name: "Auto Select", desc: "AI chooses best agent" },
   { id: "agent1", name: " Prompt Expander", desc: "Detailed specifications" },
-  { id: "agent2", name: "🏗️ Architecture Designer", desc: "System architecture" },
-  { id: "agent3", name: "💾 Backend Developer", desc: "Database & APIs" },
+  { id: "agent2", name: "Architecture Designer", desc: "System architecture" },
+  { id: "agent3", name: "Backend Developer", desc: "Database & APIs" },
   { id: "agent4", name: " Frontend Developer", desc: "UI components" },
-  { id: "agent5", name: "🔗 Integration Developer", desc: "Connect frontend-backend" },
+  { id: "agent5", name: "Integration Developer", desc: "Connect frontend-backend" },
   { id: "agent6", name: "✅ QA Engineer", desc: "Testing & quality" },
   { id: "agent7", name: " Optimization Expert", desc: "Performance & deployment" },
 ];

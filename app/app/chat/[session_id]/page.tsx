@@ -41,12 +41,12 @@ interface ChatPageProps {
 }
 
 const AGENTS = [
-  { id: "auto", name: "🤖 Auto Select", nameEn: "Auto Select", nameTh: "เลือกอัตโนมัติ", color: "bg-indigo-600" },
+  { id: "auto", name: "Auto Select", nameEn: "Auto Select", nameTh: "เลือกอัตโนมัติ", color: "bg-indigo-600" },
   { id: "agent1", name: " Prompt Expander", nameEn: "Prompt Expander", nameTh: "ขยายโปรมต์", color: "bg-purple-600" },
-  { id: "agent2", name: "🏗️ Architecture Designer", nameEn: "Architecture Designer", nameTh: "ออกแบบสถาปัตยกรรม", color: "bg-green-600" },
-  { id: "agent3", name: "💾 Backend Developer", nameEn: "Backend Developer", nameTh: "พัฒนา Backend", color: "bg-orange-600" },
+  { id: "agent2", name: "Architecture Designer", nameEn: "Architecture Designer", nameTh: "ออกแบบสถาปัตยกรรม", color: "bg-green-600" },
+  { id: "agent3", name: "Backend Developer", nameEn: "Backend Developer", nameTh: "พัฒนา Backend", color: "bg-orange-600" },
   { id: "agent4", name: " Frontend Developer", nameEn: "Frontend Developer", nameTh: "พัฒนา Frontend", color: "bg-pink-600" },
-  { id: "agent5", name: "🔗 Integration Developer", nameEn: "Integration Developer", nameTh: "พัฒนาการเชื่อมต่อ", color: "bg-cyan-600" },
+  { id: "agent5", name: "Integration Developer", nameEn: "Integration Developer", nameTh: "พัฒนาการเชื่อมต่อ", color: "bg-cyan-600" },
   { id: "agent6", name: "✅ QA Engineer", nameEn: "QA Engineer", nameTh: "วิศวกร QA", color: "bg-yellow-600" },
   { id: "agent7", name: " Optimization Expert", nameEn: "Optimization Expert", nameTh: "ผู้เชี่ยวชาญเพิ่มประสิทธิภาพ", color: "bg-red-600" },
 ];
@@ -311,7 +311,7 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                 onClick={() => setLanguage(language === "en" ? "th" : "en")}
                 className="w-full px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               >
-                🌐 {language === "en" ? "ภาษาไทย" : "English"}
+                {language === "en" ? "ภาษาไทย" : "English"}
               </button>
             </div>
           </>
