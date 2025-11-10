@@ -178,16 +178,12 @@ export default function ChatPage() {
     setMessages(prev => [...prev, assistantMessage])
     
     try {
-      // Get auth session for API request
-      const { data: { session } } = await supabase.auth.getSession()
-      const accessToken = session?.access_token
-      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
-          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` })
+          'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies for auth
         body: JSON.stringify({
           session_id: sessionId,
           messages: [...messages, userMessage].map(m => ({
