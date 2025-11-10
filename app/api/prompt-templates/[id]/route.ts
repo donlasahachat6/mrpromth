@@ -15,7 +15,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from("prompt_templates")
-      .select("*, profiles(email), ratings(rating, feedback, created_at)")
+      .select("*, profiles(display_name), ratings(rating, feedback, created_at)")
       .eq("id", id)
       .single();
 

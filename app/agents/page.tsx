@@ -201,13 +201,24 @@ export default function AgentsPage() {
     setLoading(true)
     
     try {
-      // TODO: Call API to toggle agent
+      // Call API to toggle agent
+      const response = await fetch(`/api/agents/${agentId}/toggle`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle agent');
+      }
+      
+      const { agent: updatedAgent } = await response.json();
+      
+      // Update local state
       setAgents(agents.map(agent =>
-        agent.id === agentId ? { ...agent, isActive: !agent.isActive } : agent
-      ))
+        agent.id === agentId ? { ...agent, isActive: updatedAgent.is_public } : agent
+      ));
       
       // Show success message
-      alert(`Agent ${agents.find(a => a.id === agentId)?.isActive ? 'deactivated' : 'activated'} successfully!`)
+      alert(`Agent ${updatedAgent.is_public ? 'activated' : 'deactivated'} successfully!`);
     } catch (error) {
       console.error('Error toggling agent:', error)
       alert('Failed to toggle agent')

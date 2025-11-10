@@ -1,6 +1,7 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { queryCSV as executeCSVQuery } from "@/lib/csv-query-parser";
 
 export const dynamic = "force-dynamic";
 
@@ -241,15 +242,24 @@ function queryCSV(text: string, query: string): any {
   const parsed = parseCSV(text);
   let { rows } = parsed;
 
-  // Simple query parser (supports basic SELECT, WHERE, ORDER BY)
-  // Example: "SELECT name, age WHERE age > 25 ORDER BY name"
+  // Use the CSV query parser for SQL-like queries
+  // Example: "SELECT name, age FROM data WHERE age > 25 ORDER BY name"
   
-  // TODO: Implement more robust query parser
-  // For now, return all rows
-  
-  return {
-    rows,
-    rowCount: rows.length,
-    query
-  };
+  try {
+    const result = executeCSVQuery(rows, query);
+    return {
+      columns: result.columns,
+      rows: result.rows,
+      rowCount: result.count,
+      query
+    };
+  } catch (error: any) {
+    // If query parsing fails, return all rows
+    console.warn('Query parsing failed, returning all rows:', error.message);
+    return {
+      rows,
+      rowCount: rows.length,
+      query
+    };
+  }
 }

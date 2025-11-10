@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("prompt_templates")
-      .select("*, profiles(email)")
+      .select("*, profiles(display_name)")
       .eq("is_public", true)
       .order("execution_count", { ascending: false })
       .range(offset, offset + limit - 1);
