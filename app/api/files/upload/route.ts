@@ -84,16 +84,20 @@ async function handlePOST(request: NextRequest, context: any) {
       .from('chat-files')
       .getPublicUrl(filename);
 
-    // Save file metadata to database
+    // Save file metadata to database (files table)
     const { error: dbError } = await supabase
-      .from('chat_files')
+      .from('files')
       .insert({
         user_id: user.id,
         filename: file.name,
-        filepath: filename,
-        file_type: file.type,
+        file_path: filename,
         file_size: file.size,
-        url: publicUrl
+        mime_type: file.type,
+        storage_url: publicUrl,
+        metadata: {
+          original_name: file.name,
+          uploaded_at: new Date().toISOString()
+        }
       });
 
     if (dbError) {
