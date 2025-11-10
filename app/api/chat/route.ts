@@ -4,6 +4,8 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import vm from "node:vm";
 import { inspect } from "node:util";
 import { getChatContext, buildContextPrompt } from "@/lib/chat/context-manager";
+import { withRateLimit } from "@/lib/utils/api-with-rate-limit";
+import { RateLimiters } from "@/lib/utils/rate-limiter";
 
 export const dynamic = 'force-dynamic';
 
@@ -568,7 +570,7 @@ function extractProviderText(provider: "openai" | "anthropic", payload: any): st
 }
 
 function buildStreamResponse(events: Record<string, unknown>[]) {
-  return new Response(
+  return new NextResponse(
     new ReadableStream({
       start(controller) {
         for (const event of events) {
@@ -588,7 +590,7 @@ function buildStreamResponse(events: Record<string, unknown>[]) {
   );
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies });
   const {
     data: { user },
@@ -711,3 +713,6 @@ export async function POST(request: NextRequest) {
 
   return buildStreamResponse(events);
 }
+
+// Apply rate limiting: 20 requests per minute for AI chat
+export const POST = withRateLimit(RateLimiters.ai)(handlePOST);

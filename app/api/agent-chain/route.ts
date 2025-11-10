@@ -4,12 +4,14 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 
 import { AgentChainOrchestrator } from "@/lib/agents/orchestrator";
 import { createServiceRoleSupabaseClient } from "@/lib/database";
+import { withRateLimit } from "@/lib/utils/api-with-rate-limit";
+import { RateLimiters } from "@/lib/utils/rate-limiter";
 
 export const dynamic = 'force-dynamic';
 
 export const runtime = "nodejs";
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const supabase = createRouteHandlerClient({ cookies });
 
   const {
@@ -52,6 +54,9 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ project_id: project.id, status: "pending" });
 }
+
+// Apply rate limiting: 20 requests per minute for agent chain execution
+export const POST = withRateLimit(RateLimiters.ai)(handlePOST);
 
 async function runAgentChainInBackground({
   projectId,

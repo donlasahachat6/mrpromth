@@ -17,7 +17,7 @@ interface RateLimitConfig {
 /**
  * Rate limit info
  */
-interface RateLimitInfo {
+export interface RateLimitInfo {
   limit: number
   remaining: number
   reset: number // Timestamp when limit resets
@@ -64,7 +64,7 @@ export class RateLimiter {
 
       return {
         limit: this.config.maxRequests,
-        remaining: 0,
+        remaining: -1, // Negative to indicate rate limit exceeded
         reset,
         retryAfter,
       }

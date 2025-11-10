@@ -1,6 +1,8 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { withRateLimit } from "@/lib/utils/api-with-rate-limit";
+import { RateLimiters } from "@/lib/utils/rate-limiter";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +15,7 @@ interface AgentStep {
 }
 
 // POST /api/agents/[id]/execute - Execute an agent
-export async function POST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -187,6 +189,9 @@ export async function POST(
     );
   }
 }
+
+// Apply rate limiting: 20 requests per minute for agent execution
+export const POST = withRateLimit(RateLimiters.ai)(handlePOST);
 
 // Helper function to execute prompt step
 async function executePromptStep(step: AgentStep, context: any, request: NextRequest) {

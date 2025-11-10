@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { WorkflowOrchestrator } from '@/lib/workflow/orchestrator'
+import { withRateLimit } from '@/lib/utils/api-with-rate-limit'
+import { RateLimiters } from '@/lib/utils/rate-limiter'
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * POST /api/workflow
  * Start a new workflow
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
@@ -66,3 +68,6 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// Apply rate limiting: 5 workflows per hour
+export const POST = withRateLimit(RateLimiters.projectGeneration)(handlePOST);

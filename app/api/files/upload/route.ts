@@ -1,11 +1,13 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
+import { withRateLimit } from '@/lib/utils/api-with-rate-limit';
+import { RateLimiters } from '@/lib/utils/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
 // POST /api/files/upload - Upload file for chat
-export async function POST(request: Request) {
+async function handlePOST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies });
     
@@ -115,3 +117,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Apply rate limiting: 30 requests per minute for file uploads
+export const POST = withRateLimit(RateLimiters.standard)(handlePOST);
