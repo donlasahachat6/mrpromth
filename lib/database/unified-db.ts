@@ -14,6 +14,11 @@ export function isSupabaseConfigured(): boolean {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
+    // During build time, return false instead of throwing
+    if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+      console.warn('⚠️ Supabase credentials not found during build');
+      return false;
+    }
     throw new Error('Supabase credentials are required. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.')
   }
 
@@ -31,7 +36,13 @@ export function getDatabaseMode(): 'supabase' {
  * Create unified database client
  */
 export function createUnifiedDatabase() {
-  isSupabaseConfigured() // Will throw if not configured
+  const configured = isSupabaseConfigured();
+  
+  // During build time, return a placeholder client
+  if (!configured && process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+    console.warn('⚠️ Creating placeholder Supabase client for build');
+    return createClient<Database>('https://placeholder.supabase.co', 'placeholder-anon-key');
+  }
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!

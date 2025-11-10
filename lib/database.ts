@@ -1,18 +1,28 @@
 import { createClient } from '@supabase/supabase-js'
 import { unifiedDb, isSupabaseConfigured } from './database/unified-db'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Handle build time vs runtime
+const isBuildTime = process.env.NODE_ENV === 'production' && typeof window === 'undefined' && !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-// Ensure Supabase is configured
-isSupabaseConfigured();
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key';
+
+// Ensure Supabase is configured (skip during build)
+if (!isBuildTime) {
+  isSupabaseConfigured();
+}
 
 // Export Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export function createServiceRoleSupabaseClient() {
-  if (!supabaseServiceRoleKey) {
+  // During build time, return placeholder client
+  if (isBuildTime) {
+    return createClient('https://placeholder.supabase.co', 'placeholder-service-key');
+  }
+  
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('Service role key not configured');
   }
   return createClient(supabaseUrl, supabaseServiceRoleKey);

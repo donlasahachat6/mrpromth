@@ -15,6 +15,11 @@ class VanchinLoadBalancer {
   private baseUrl = process.env.VANCHIN_BASE_URL || 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints';
 
   constructor() {
+    // Skip initialization during build time
+    if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.VANCHIN_API_KEY_1) {
+      console.log('⚠️ Skipping Vanchin initialization during build');
+      return;
+    }
     this.initializeKeyPairs();
   }
 
@@ -35,7 +40,11 @@ class VanchinLoadBalancer {
       }
     }
 
-    console.log(`✅ Vanchin Load Balancer initialized with ${this.keyPairs.length} key pairs`);
+    if (this.keyPairs.length > 0) {
+      console.log(`✅ Vanchin Load Balancer initialized with ${this.keyPairs.length} key pairs`);
+    } else {
+      console.warn('⚠️ No Vanchin API keys found in environment variables');
+    }
   }
 
   // Get next available key pair using round-robin strategy

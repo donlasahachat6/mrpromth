@@ -27,6 +27,15 @@ export class DatabaseClient {
     const key = config?.serviceRoleKey || config?.anonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!url || !key) {
+      // During build time, create a dummy client to avoid errors
+      if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
+        console.warn('⚠️ Supabase credentials not found during build, using placeholder');
+        this.supabase = createClient<Database>(
+          'https://placeholder.supabase.co',
+          'placeholder-anon-key'
+        );
+        return;
+      }
       throw new Error('Supabase credentials are required. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.')
     }
 
