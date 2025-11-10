@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useRef, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { Paperclip, X, FileText, Image as ImageIcon, FileCode, File, Send, Loader2, Copy, Check } from 'lucide-react'
+import { Paperclip, X, FileText, Image as ImageIcon, FileCode, File, Send, Loader2, Copy, Check, MessageCircle, Code2, FolderKanban, Bug, Zap, Shuffle, Cpu, Brain, Paperclip as PaperclipIcon } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
@@ -301,21 +301,45 @@ export default function ChatPage() {
               onChange={(e) => setSelectedMode(e.target.value as any)}
               className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             >
-              <option value="chat">💬 Chat Mode</option>
-              <option value="code">💻 Code Mode</option>
-              <option value="project">🏗️ Project Mode</option>
-              <option value="debug">🐛 Debug Mode</option>
+              <option value="chat">Chat Mode</option>
+              <option value="code">Code Mode</option>
+              <option value="project">Project Mode</option>
+              <option value="debug">Debug Mode</option>
             </select>
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
               className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
             >
-              <option value="auto">⚡ Auto (Load Balanced)</option>
-              <option value="random">🎲 Random Selection</option>
-              <option value="model_1">Model 1</option>
-              <option value="model_2">Model 2</option>
-              <option value="model_3">Model 3</option>
+              <option value="auto">Auto (Load Balanced)</option>
+              <option value="random">Random Selection</option>
+              <optgroup label="Project Planning">
+                <option value="model_1">Model 1 - Project Planner</option>
+                <option value="model_2">Model 2 - Requirements</option>
+                <option value="model_3">Model 3 - Architecture</option>
+              </optgroup>
+              <optgroup label="Frontend Development">
+                <option value="model_4">Model 4 - React/Next.js</option>
+                <option value="model_5">Model 5 - UI Components</option>
+                <option value="model_6">Model 6 - Frontend Logic</option>
+                <option value="model_7">Model 7 - State Management</option>
+                <option value="model_8">Model 8 - Routing</option>
+              </optgroup>
+              <optgroup label="Backend Development">
+                <option value="model_9">Model 9 - API Routes</option>
+                <option value="model_10">Model 10 - Server Logic</option>
+                <option value="model_11">Model 11 - Authentication</option>
+                <option value="model_12">Model 12 - Middleware</option>
+                <option value="model_13">Model 13 - Integration</option>
+              </optgroup>
+              <optgroup label="Database & Design">
+                <option value="model_14">Model 14 - Schema Design</option>
+                <option value="model_15">Model 15 - Migrations</option>
+                <option value="model_16">Model 16 - Query Optimization</option>
+                <option value="model_17">Model 17 - UI/UX Design</option>
+                <option value="model_18">Model 18 - Styling</option>
+                <option value="model_19">Model 19 - Design System</option>
+              </optgroup>
             </select>
             <button
               onClick={handleLogout}
@@ -343,17 +367,23 @@ export default function ChatPage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-4xl mb-3">💻</div>
+                  <div className="mb-3 flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+                    <Code2 className="h-6 w-6 text-white" />
+                  </div>
                   <h3 className="font-semibold text-gray-900 mb-2">สร้างโค้ด</h3>
                   <p className="text-sm text-gray-600">สร้างโปรเจคเว็บไซต์, แอพ, API อัตโนมัติ</p>
                 </div>
                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-4xl mb-3">🧠</div>
+                  <div className="mb-3 flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+                    <Brain className="h-6 w-6 text-white" />
+                  </div>
                   <h3 className="font-semibold text-gray-900 mb-2">ตอบคำถาม</h3>
                   <p className="text-sm text-gray-600">ตอบทุกคำถาม วิเคราะห์ปัญหา แนะนำแก้ไข</p>
                 </div>
                 <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-4xl mb-3">📎</div>
+                  <div className="mb-3 flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+                    <PaperclipIcon className="h-6 w-6 text-white" />
+                  </div>
                   <h3 className="font-semibold text-gray-900 mb-2">อัพโหลดไฟล์</h3>
                   <p className="text-sm text-gray-600">รองรับ PDF, รูปภาพ, CSV, และโค้ด</p>
                 </div>
