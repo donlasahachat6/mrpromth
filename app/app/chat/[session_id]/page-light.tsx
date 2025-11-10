@@ -3,19 +3,22 @@
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { 
   Send, 
   Loader2, 
   Copy, 
   Check, 
-  Paperclip,
+  Paperclip, 
   Plus,
   MessageSquare,
+  Sparkles,
   Settings,
-  X,
-  Upload,
-  File,
+  Trash2,
+  Edit3,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface ChatMessage {
@@ -26,7 +29,6 @@ interface ChatMessage {
   isStreaming?: boolean;
   agentId?: string;
   agentName?: string;
-  files?: Array<{name: string; url: string}>;
 }
 
 interface ChatSession {
@@ -41,17 +43,17 @@ interface ChatPageProps {
 }
 
 const AGENTS = [
-  { id: "auto", name: "🤖 Auto Select", nameEn: "Auto Select", nameTh: "เลือกอัตโนมัติ", color: "bg-indigo-600" },
-  { id: "agent1", name: "📝 Prompt Expander", nameEn: "Prompt Expander", nameTh: "ขยายโปรมต์", color: "bg-purple-600" },
-  { id: "agent2", name: "🏗️ Architecture Designer", nameEn: "Architecture Designer", nameTh: "ออกแบบสถาปัตยกรรม", color: "bg-green-600" },
-  { id: "agent3", name: "💾 Backend Developer", nameEn: "Backend Developer", nameTh: "พัฒนา Backend", color: "bg-orange-600" },
-  { id: "agent4", name: "🎨 Frontend Developer", nameEn: "Frontend Developer", nameTh: "พัฒนา Frontend", color: "bg-pink-600" },
-  { id: "agent5", name: "🔗 Integration Developer", nameEn: "Integration Developer", nameTh: "พัฒนาการเชื่อมต่อ", color: "bg-cyan-600" },
-  { id: "agent6", name: "✅ QA Engineer", nameEn: "QA Engineer", nameTh: "วิศวกร QA", color: "bg-yellow-600" },
-  { id: "agent7", name: "⚡ Optimization Expert", nameEn: "Optimization Expert", nameTh: "ผู้เชี่ยวชาญเพิ่มประสิทธิภาพ", color: "bg-red-600" },
+  { id: "auto", name: "🤖 Auto Select", nameEn: "Auto Select", nameTh: "เลือกอัตโนมัติ", color: "bg-blue-500" },
+  { id: "agent1", name: "📝 Prompt Expander", nameEn: "Prompt Expander", nameTh: "ขยายโปรมต์", color: "bg-purple-500" },
+  { id: "agent2", name: "🏗️ Architecture Designer", nameEn: "Architecture Designer", nameTh: "ออกแบบสถาปัตยกรรม", color: "bg-green-500" },
+  { id: "agent3", name: "💾 Backend Developer", nameEn: "Backend Developer", nameTh: "พัฒนา Backend", color: "bg-orange-500" },
+  { id: "agent4", name: "🎨 Frontend Developer", nameEn: "Frontend Developer", nameTh: "พัฒนา Frontend", color: "bg-pink-500" },
+  { id: "agent5", name: "🔗 Integration Developer", nameEn: "Integration Developer", nameTh: "พัฒนาการเชื่อมต่อ", color: "bg-cyan-500" },
+  { id: "agent6", name: "✅ QA Engineer", nameEn: "QA Engineer", nameTh: "วิศวกร QA", color: "bg-yellow-500" },
+  { id: "agent7", name: "⚡ Optimization Expert", nameEn: "Optimization Expert", nameTh: "ผู้เชี่ยวชาญเพิ่มประสิทธิภาพ", color: "bg-red-500" },
 ];
 
-export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
+export default function CodexStyleChatPage({ params }: ChatPageProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [input, setInput] = useState("");
@@ -61,11 +63,8 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [language, setLanguage] = useState<"en" | "th">("th");
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const [showFileUpload, setShowFileUpload] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -100,26 +99,14 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAttachedFiles(Array.from(e.target.files));
-      setShowFileUpload(false);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setAttachedFiles(files => files.filter((_, i) => i !== index));
-  };
-
   const handleSend = async () => {
-    if ((!input.trim() && attachedFiles.length === 0) || isStreaming) return;
+    if (!input.trim() || isStreaming) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content: input.trim(),
       createdAt: new Date().toISOString(),
-      files: attachedFiles.map(f => ({ name: f.name, url: "" })),
     };
 
     const agent = AGENTS.find(a => a.id === selectedAgent) || AGENTS[0];
@@ -135,7 +122,6 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
 
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setInput("");
-    setAttachedFiles([]);
     setIsStreaming(true);
 
     try {
@@ -216,7 +202,7 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
       });
     } finally {
       setIsStreaming(false);
-      loadSessions();
+      loadSessions(); // Refresh session list
     }
   };
 
@@ -253,20 +239,18 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
     aiResponding: language === "th" ? "กำลังตอบกลับ..." : "AI is responding...",
     startConversation: language === "th" ? "เริ่มการสนทนา" : "Start a conversation",
     chooseAgent: language === "th" ? "เลือก AI agent และพิมพ์ข้อความด้านล่าง" : "Choose an AI agent and type your message below",
-    attachFiles: language === "th" ? "แนบไฟล์" : "Attach files",
-    uploadFile: language === "th" ? "อัปโหลดไฟล์" : "Upload file",
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
-      {/* Sidebar - Dark Theme */}
-      <div className={`${sidebarCollapsed ? "w-0" : "w-64"} transition-all duration-300 bg-gray-800 border-r border-gray-700 flex flex-col overflow-hidden`}>
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar - Chat History */}
+      <div className={`${sidebarCollapsed ? "w-0" : "w-64"} transition-all duration-300 bg-white border-r flex flex-col overflow-hidden`}>
         {!sidebarCollapsed && (
           <>
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-b">
               <button
                 onClick={createNewSession}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 {t.newChat}
@@ -274,7 +258,7 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
             </div>
 
             <div className="flex-1 overflow-y-auto p-2">
-              <h3 className="px-2 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <h3 className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">
                 {t.chatHistory}
               </h3>
               <div className="space-y-1 mt-2">
@@ -282,16 +266,14 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                   <a
                     key={session.id}
                     href={`/app/chat/${session.id}`}
-                    className={`block px-3 py-2 rounded-lg transition-colors ${
-                      session.id === params.session_id 
-                        ? "bg-gray-700 border-l-2 border-indigo-500" 
-                        : "hover:bg-gray-750"
+                    className={`block px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                      session.id === params.session_id ? "bg-blue-50 border-l-2 border-blue-500" : ""
                     }`}
                   >
                     <div className="flex items-start gap-2">
                       <MessageSquare className="w-4 h-4 mt-0.5 text-gray-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-200 truncate">
+                        <div className="text-sm font-medium text-gray-900 truncate">
                           {session.title}
                         </div>
                         {session.lastMessage && (
@@ -306,10 +288,10 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-700">
+            <div className="p-4 border-t">
               <button
                 onClick={() => setLanguage(language === "en" ? "th" : "en")}
-                className="w-full px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+                className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 🌐 {language === "en" ? "ภาษาไทย" : "English"}
               </button>
@@ -318,28 +300,28 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
         )}
       </div>
 
-      {/* Main Chat Area - Dark Theme */}
-      <div className="flex-1 flex flex-col bg-gray-900">
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border-b px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 hover:bg-gray-700 rounded transition-colors text-gray-400"
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
             >
-              <MessageSquare className="w-5 h-5" />
+              {sidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
             </button>
-            <h1 className="text-lg font-semibold text-gray-100">Mr.Prompt Chat</h1>
+            <h1 className="text-lg font-semibold">Mr.Prompt Chat</h1>
           </div>
 
           {/* Agent Selector */}
           <div className="relative">
             <button
               onClick={() => setShowAgentMenu(!showAgentMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg hover:bg-gray-650 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition-colors"
             >
               <div className={`w-2 h-2 rounded-full ${currentAgent.color}`}></div>
-              <span className="text-sm font-medium text-gray-200">
+              <span className="text-sm font-medium">
                 {language === "th" ? currentAgent.nameTh : currentAgent.nameEn}
               </span>
               <Settings className="w-4 h-4 text-gray-400" />
@@ -351,9 +333,9 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                   className="fixed inset-0 z-10" 
                   onClick={() => setShowAgentMenu(false)}
                 />
-                <div className="absolute right-0 mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 max-h-96 overflow-y-auto">
-                  <div className="p-2 border-b border-gray-700">
-                    <p className="text-xs text-gray-400 px-2">{t.selectAgent}</p>
+                <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-20 max-h-96 overflow-y-auto">
+                  <div className="p-2 border-b">
+                    <p className="text-xs text-gray-500 px-2">{t.selectAgent}</p>
                   </div>
                   {AGENTS.map((agent) => (
                     <button
@@ -362,18 +344,18 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                         setSelectedAgent(agent.id);
                         setShowAgentMenu(false);
                       }}
-                      className={`w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors flex items-center gap-3 ${
-                        selectedAgent === agent.id ? "bg-gray-750" : ""
+                      className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center gap-3 ${
+                        selectedAgent === agent.id ? "bg-blue-50" : ""
                       }`}
                     >
                       <div className={`w-3 h-3 rounded-full ${agent.color} flex-shrink-0`}></div>
                       <div className="flex-1">
-                        <div className="font-medium text-sm text-gray-200">
+                        <div className="font-medium text-sm">
                           {language === "th" ? agent.nameTh : agent.nameEn}
                         </div>
                       </div>
                       {selectedAgent === agent.id && (
-                        <Check className="w-4 h-4 text-indigo-400" />
+                        <Check className="w-4 h-4 text-blue-500" />
                       )}
                     </button>
                   ))}
@@ -388,10 +370,8 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
           <div className="max-w-4xl mx-auto space-y-6">
             {messages.length === 0 && (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="w-8 h-8 text-gray-600" />
-                </div>
-                <h2 className="text-2xl font-semibold text-gray-300 mb-2">
+                <Sparkles className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-gray-700 mb-2">
                   {t.startConversation}
                 </h2>
                 <p className="text-gray-500">
@@ -407,7 +387,7 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
               >
                 {message.role === "assistant" && (
                   <div className="flex-shrink-0">
-                    <div className={`w-8 h-8 rounded-full ${AGENTS.find(a => a.id === message.agentId)?.color || "bg-gray-600"} flex items-center justify-center text-white font-semibold text-sm`}>
+                    <div className={`w-8 h-8 rounded-full ${AGENTS.find(a => a.id === message.agentId)?.color || "bg-gray-400"} flex items-center justify-center text-white font-semibold text-sm`}>
                       AI
                     </div>
                   </div>
@@ -429,12 +409,12 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                   <div
                     className={`rounded-2xl px-4 py-3 ${
                       message.role === "user"
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-800 border border-gray-700 text-gray-200"
+                        ? "bg-blue-500 text-white"
+                        : "bg-white border shadow-sm"
                     }`}
                   >
                     {message.role === "assistant" ? (
-                      <div className="prose prose-invert prose-sm max-w-none">
+                      <div className="prose prose-sm max-w-none">
                         <ReactMarkdown
                           components={{
                             code({ node, className, children, ...props }: any) {
@@ -446,16 +426,16 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                                 <div className="relative group my-4">
                                   <button
                                     onClick={() => copyToClipboard(codeString, message.id + "-code")}
-                                    className="absolute right-2 top-2 p-2 bg-gray-900 hover:bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                    className="absolute right-2 top-2 p-2 bg-gray-700 hover:bg-gray-600 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                   >
                                     {copiedId === message.id + "-code" ? (
                                       <Check className="w-4 h-4 text-green-400" />
                                     ) : (
-                                      <Copy className="w-4 h-4 text-gray-400" />
+                                      <Copy className="w-4 h-4 text-gray-300" />
                                     )}
                                   </button>
                                   <SyntaxHighlighter
-                                    style={oneDark}
+                                    style={vscDarkPlus}
                                     language={match[1]}
                                     PreTag="div"
                                     {...props}
@@ -464,7 +444,7 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                                   </SyntaxHighlighter>
                                 </div>
                               ) : (
-                                <code className={`${className} bg-gray-900 px-1.5 py-0.5 rounded text-sm text-indigo-300`} {...props}>
+                                <code className={`${className} bg-gray-100 px-1 py-0.5 rounded text-sm`} {...props}>
                                   {children}
                                 </code>
                               );
@@ -474,30 +454,18 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                           {message.content}
                         </ReactMarkdown>
                         {message.isStreaming && (
-                          <span className="inline-block w-2 h-4 bg-indigo-500 ml-1 animate-pulse" />
+                          <span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse" />
                         )}
                       </div>
                     ) : (
-                      <>
-                        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-                        {message.files && message.files.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {message.files.map((file, i) => (
-                              <div key={i} className="flex items-center gap-2 text-xs bg-indigo-700 px-2 py-1 rounded">
-                                <File className="w-3 h-3" />
-                                <span>{file.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
+                      <p className="whitespace-pre-wrap text-sm">{message.content}</p>
                     )}
                   </div>
                 </div>
 
                 {message.role === "user" && (
                   <div className="flex-shrink-0">
-                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-semibold text-sm">
                       U
                     </div>
                   </div>
@@ -508,40 +476,11 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
           </div>
         </div>
 
-        {/* Input Area - Dark Theme */}
-        <div className="bg-gray-800 border-t border-gray-700 px-4 py-4">
+        {/* Input Area */}
+        <div className="bg-white border-t px-4 py-4">
           <div className="max-w-4xl mx-auto">
-            {/* Attached Files */}
-            {attachedFiles.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-2">
-                {attachedFiles.map((file, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-gray-700 px-3 py-1.5 rounded-lg text-sm text-gray-200">
-                    <File className="w-4 h-4" />
-                    <span className="max-w-[200px] truncate">{file.name}</span>
-                    <button
-                      onClick={() => removeFile(i)}
-                      className="text-gray-400 hover:text-gray-200"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-end gap-2 bg-gray-700 border border-gray-600 rounded-xl p-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-              <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 text-gray-400 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-600"
-                title={t.attachFiles}
-              >
+            <div className="flex items-end gap-2 bg-gray-50 border rounded-xl p-2">
+              <button className="p-2 text-gray-500 hover:text-gray-700 transition-colors rounded-lg hover:bg-gray-100">
                 <Paperclip className="w-5 h-5" />
               </button>
               <textarea
@@ -555,7 +494,7 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
                   }
                 }}
                 placeholder={t.typeMessage}
-                className="flex-1 resize-none bg-transparent border-0 focus:outline-none focus:ring-0 px-2 py-2 max-h-32 text-gray-200 placeholder-gray-500"
+                className="flex-1 resize-none bg-transparent border-0 focus:outline-none focus:ring-0 px-2 py-2 max-h-32"
                 rows={1}
                 disabled={isStreaming}
                 style={{
@@ -565,8 +504,8 @@ export default function DarkProfessionalChatPage({ params }: ChatPageProps) {
               />
               <button
                 onClick={handleSend}
-                disabled={(!input.trim() && attachedFiles.length === 0) || isStreaming}
-                className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                disabled={!input.trim() || isStreaming}
+                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {isStreaming ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

@@ -41,9 +41,14 @@ export function PromptInput({ onGenerate, isLoading = false }: PromptInputProps)
     setAttachedFiles(prev => [...prev, ...files]);
   };
 
-  const handleGitHubImport = () => {
-    // TODO: Implement GitHub import
-    alert('GitHub Import feature - Coming soon!');
+  const handleGitHubImport = async () => {
+    try {
+      // Redirect to GitHub import page
+      window.location.href = '/api/github/import';
+    } catch (error) {
+      console.error('GitHub import error:', error);
+      alert('Failed to start GitHub import. Please try again.');
+    }
   };
 
   const examplePrompts = [
