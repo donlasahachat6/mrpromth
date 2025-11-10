@@ -1,18 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { mockAuth, shouldUseMockAuth } from '@/lib/auth/mock-auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [useMock, setUseMock] = useState(false)
   
   const router = useRouter()
   const supabase = createClientComponentClient()
+  
+  useEffect(() => {
+    // Check if should use mock auth
+    setUseMock(shouldUseMockAuth())
+  }, [])
   
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,16 +27,29 @@ export default function LoginPage() {
     setError('')
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      
-      if (error) {
-        setError(error.message)
+      if (useMock) {
+        // Use mock authentication
+        const { user, error: mockError } = await mockAuth.signIn(email, password)
+        
+        if (mockError) {
+          setError(mockError)
+        } else {
+          router.push('/chat')
+          router.refresh()
+        }
       } else {
-        router.push('/chat')
-        router.refresh()
+        // Use Supabase authentication
+        const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        
+        if (supabaseError) {
+          setError(supabaseError.message)
+        } else {
+          router.push('/chat')
+          router.refresh()
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred')
@@ -43,16 +63,30 @@ export default function LoginPage() {
     setError('')
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+      if (useMock) {
+        // Use mock OAuth
+        const { url, error: mockError } = await mockAuth.signInWithOAuth('github')
+        
+        if (mockError) {
+          setError(mockError)
+          setLoading(false)
+        } else if (url) {
+          router.push(url)
+          router.refresh()
         }
-      })
-      
-      if (error) {
-        setError(error.message)
-        setLoading(false)
+      } else {
+        // Use Supabase OAuth
+        const { error: supabaseError } = await supabase.auth.signInWithOAuth({
+          provider: 'github',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        })
+        
+        if (supabaseError) {
+          setError(supabaseError.message)
+          setLoading(false)
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred')
@@ -65,16 +99,30 @@ export default function LoginPage() {
     setError('')
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+      if (useMock) {
+        // Use mock OAuth
+        const { url, error: mockError } = await mockAuth.signInWithOAuth('google')
+        
+        if (mockError) {
+          setError(mockError)
+          setLoading(false)
+        } else if (url) {
+          router.push(url)
+          router.refresh()
         }
-      })
-      
-      if (error) {
-        setError(error.message)
-        setLoading(false)
+      } else {
+        // Use Supabase OAuth
+        const { error: supabaseError } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        })
+        
+        if (supabaseError) {
+          setError(supabaseError.message)
+          setLoading(false)
+        }
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred')
@@ -92,6 +140,22 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             AI Agent สร้างโค้ดอัตโนมัติด้วย 19 AI Models
           </p>
+          {useMock && (
+            <div className="mt-3 rounded-md bg-yellow-50 p-3">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs text-yellow-700">
+                    <strong>โหมดทดสอบ:</strong> ใช้ Mock Authentication (Supabase ไม่พร้อม)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* OAuth Buttons */}
@@ -200,9 +264,23 @@ export default function LoginPage() {
                 สมัครสมาชิก
               </Link>
             </p>
-            <p className="text-xs text-gray-500">
-              ทดสอบ: test@mrpromth.com / Test123456!
-            </p>
+            {useMock ? (
+              <div className="space-y-1">
+                <p className="text-xs text-gray-500">
+                  <strong>Demo Accounts:</strong>
+                </p>
+                <p className="text-xs text-gray-500">
+                  demo@example.com (password: อะไรก็ได้)
+                </p>
+                <p className="text-xs text-gray-500">
+                  admin@example.com (password: อะไรก็ได้)
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">
+                ทดสอบ: test@mrpromth.com / Test123456!
+              </p>
+            )}
           </div>
         </form>
       </div>

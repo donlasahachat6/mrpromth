@@ -1,20 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { mockAuth, shouldUseMockAuth } from '@/lib/auth/mock-auth'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [useMock, setUseMock] = useState(false)
   
   const router = useRouter()
   const supabase = createClientComponentClient()
+  
+  useEffect(() => {
+    setUseMock(shouldUseMockAuth())
+  }, [])
   
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,22 +44,40 @@ export default function SignUpPage() {
     }
     
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+      if (useMock) {
+        // Use mock authentication
+        const { user, error: mockError } = await mockAuth.signUp(email, password, name)
+        
+        if (mockError) {
+          setError(mockError)
+        } else {
+          setSuccess(true)
+          setTimeout(() => {
+            router.push('/chat')
+            router.refresh()
+          }, 1000)
         }
-      })
-      
-      if (error) {
-        setError(error.message)
       } else {
-        setSuccess(true)
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          router.push('/auth/login')
-        }, 2000)
+        // Use Supabase authentication
+        const { data, error: supabaseError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              name: name || email.split('@')[0],
+            }
+          }
+        })
+        
+        if (supabaseError) {
+          setError(supabaseError.message)
+        } else {
+          setSuccess(true)
+          setTimeout(() => {
+            router.push('/auth/login')
+          }, 2000)
+        }
       }
     } catch (err: any) {
       setError(err.message || 'เกิดข้อผิดพลาด')
@@ -66,16 +91,28 @@ export default function SignUpPage() {
     setError('')
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+      if (useMock) {
+        const { url, error: mockError } = await mockAuth.signInWithOAuth('github')
+        
+        if (mockError) {
+          setError(mockError)
+          setLoading(false)
+        } else if (url) {
+          router.push(url)
+          router.refresh()
         }
-      })
-      
-      if (error) {
-        setError(error.message)
-        setLoading(false)
+      } else {
+        const { error: supabaseError } = await supabase.auth.signInWithOAuth({
+          provider: 'github',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        })
+        
+        if (supabaseError) {
+          setError(supabaseError.message)
+          setLoading(false)
+        }
       }
     } catch (err: any) {
       setError(err.message || 'เกิดข้อผิดพลาด')
@@ -88,16 +125,28 @@ export default function SignUpPage() {
     setError('')
     
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+      if (useMock) {
+        const { url, error: mockError } = await mockAuth.signInWithOAuth('google')
+        
+        if (mockError) {
+          setError(mockError)
+          setLoading(false)
+        } else if (url) {
+          router.push(url)
+          router.refresh()
         }
-      })
-      
-      if (error) {
-        setError(error.message)
-        setLoading(false)
+      } else {
+        const { error: supabaseError } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        })
+        
+        if (supabaseError) {
+          setError(supabaseError.message)
+          setLoading(false)
+        }
       }
     } catch (err: any) {
       setError(err.message || 'เกิดข้อผิดพลาด')
@@ -113,9 +162,42 @@ export default function SignUpPage() {
             🚀 สมัครสมาชิก MR.Promth
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            AI Assistant ที่ทำได้ทุกอย่าง พร้อมใช้งานฟรี
+            เริ่มสร้างโปรเจกต์ด้วย AI Agent
           </p>
+          {useMock && (
+            <div className="mt-3 rounded-md bg-yellow-50 p-3">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-xs text-yellow-700">
+                    <strong>โหมดทดสอบ:</strong> ใช้ Mock Authentication (ไม่มีการยืนยันอีเมล)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+        
+        {success && (
+          <div className="rounded-md bg-green-50 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">
+                  {useMock ? 'สมัครสมาชิกสำเร็จ! กำลังเข้าสู่ระบบ...' : 'สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยัน'}
+                </h3>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* OAuth Buttons */}
         <div className="space-y-3">
@@ -163,7 +245,22 @@ export default function SignUpPage() {
         <form className="mt-8 space-y-6" onSubmit={handleEmailSignUp}>
           <div className="rounded-md shadow-sm space-y-3">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="sr-only">
+                ชื่อ
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="ชื่อ (ไม่บังคับ)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="sr-only">
                 Email
               </label>
               <input
@@ -173,14 +270,14 @@ export default function SignUpPage() {
                 autoComplete="email"
                 required
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="your@email.com"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                รหัสผ่าน
+              <label htmlFor="password" className="sr-only">
+                Password
               </label>
               <input
                 id="password"
@@ -189,23 +286,23 @@ export default function SignUpPage() {
                 autoComplete="new-password"
                 required
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="อย่างน้อย 8 ตัวอักษร"
+                placeholder="Password (อย่างน้อย 8 ตัวอักษร)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                ยืนยันรหัสผ่าน
+              <label htmlFor="confirmPassword" className="sr-only">
+                Confirm Password
               </label>
               <input
-                id="confirm-password"
-                name="confirm-password"
+                id="confirmPassword"
+                name="confirmPassword"
                 type="password"
                 autoComplete="new-password"
                 required
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="ยืนยันรหัสผ่าน"
+                placeholder="ยืนยัน Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -217,18 +314,6 @@ export default function SignUpPage() {
               <div className="flex">
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="rounded-md bg-green-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-green-800">
-                    สมัครสมาชิกสำเร็จ! กำลังนำคุณไปหน้า Login...
-                  </h3>
                 </div>
               </div>
             </div>
