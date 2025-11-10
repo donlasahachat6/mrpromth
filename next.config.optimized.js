@@ -11,7 +11,7 @@ const nextConfig = {
   // Image Optimization
   images: {
     domains: [
-      process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '') || 'liywmjxhllpexzrnuhlu.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', ''),
       'avatars.githubusercontent.com',
       'lh3.googleusercontent.com'
     ],

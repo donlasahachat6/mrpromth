@@ -5,8 +5,8 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://liywmjxhllpexzrnuhlu.supabase.co'
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpeXdtanhobGxwZXh6cm51aGx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2NjI5OTQsImV4cCI6MjA3ODIzODk5NH0.64jwIELip8KiAR0i5uXCjp0CYvsQUOYSxKM83zSTXoE'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 console.log('🔍 Testing Supabase Authentication\n')
 console.log('=' .repeat(80))

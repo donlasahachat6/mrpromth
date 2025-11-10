@@ -1,4 +1,6 @@
 import { SiteHeader } from '@/components/site-header';
+
+export const dynamic = 'force-dynamic'
 import Link from 'next/link';
 import { Bot, Zap, Code, BarChart3, Globe, FileCode, Shield, Cpu, Users, Target, Eye } from 'lucide-react';
 

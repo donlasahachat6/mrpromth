@@ -1,4 +1,6 @@
 import { SiteHeader } from '@/components/site-header';
+
+export const dynamic = 'force-dynamic'
 import Link from 'next/link';
 import { Book, Rocket, Code, Database, Shield, Zap, CheckCircle2 } from 'lucide-react';
 

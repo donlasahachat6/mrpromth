@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { ChatInterfaceSimple } from '@/components/chat-interface-simple'

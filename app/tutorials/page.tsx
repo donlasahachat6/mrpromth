@@ -1,4 +1,6 @@
 import { SiteHeader } from '@/components/site-header';
+
+export const dynamic = 'force-dynamic'
 import Link from 'next/link';
 import { BookOpen, Bot, Globe, FileCode, BarChart3, Code } from 'lucide-react';
 

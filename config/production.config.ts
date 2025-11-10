@@ -144,7 +144,7 @@ export const PRODUCTION_CONFIG = {
         'style-src': ["'self'", "'unsafe-inline'"],
         'img-src': ["'self'", 'data:', 'https:'],
         'font-src': ["'self'", 'data:'],
-        'connect-src': ["'self'", process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://liywmjxhllpexzrnuhlu.supabase.co']
+        'connect-src': ["'self'", process.env.NEXT_PUBLIC_SUPABASE_URL || ''].filter(Boolean)
       }
     }
   },
