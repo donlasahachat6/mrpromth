@@ -1,23 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 import { unifiedDb, isSupabaseConfigured } from './database/unified-db'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Use unified DB that supports both Supabase and mock mode
-export const supabase = isSupabaseConfigured() 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null as any; // Will use unifiedDb instead;
+// Ensure Supabase is configured
+isSupabaseConfigured();
+
+// Export Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export function createServiceRoleSupabaseClient() {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured, using mock database');
-    return null as any; // Will use unifiedDb instead
-  }
   if (!supabaseServiceRoleKey) {
-    console.warn('Service role key not configured');
-    return null as any;
+    throw new Error('Service role key not configured');
   }
   return createClient(supabaseUrl, supabaseServiceRoleKey);
 }

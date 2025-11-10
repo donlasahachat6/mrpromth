@@ -1,9 +1,8 @@
 /**
  * Unified Database Interface
- * ใช้ Supabase หรือ Mock Database ขึ้นอยู่กับ configuration
+ * ใช้ Supabase เท่านั้น (ลบ Mock Mode ออกแล้ว)
  */
 
-import { DatabaseClient } from './db-client'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../database.types'
 
@@ -14,36 +13,30 @@ export function isSupabaseConfigured(): boolean {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  return !!(
-    supabaseUrl &&
-    supabaseKey &&
-    !supabaseKey.includes('placeholder') &&
-    !supabaseUrl.includes('localhost')
-  )
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase credentials are required. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.')
+  }
+
+  return true
 }
 
 /**
  * Get database mode
  */
-export function getDatabaseMode(): 'supabase' | 'mock' {
-  return isSupabaseConfigured() ? 'supabase' : 'mock'
+export function getDatabaseMode(): 'supabase' {
+  return 'supabase'
 }
 
 /**
  * Create unified database client
  */
 export function createUnifiedDatabase() {
-  const mode = getDatabaseMode()
-
-  if (mode === 'mock') {
-    console.log('[Database] Using mock database (Supabase not configured)')
-    return new DatabaseClient() // Will use mock mode automatically
-  }
-
-  console.log('[Database] Using Supabase')
+  isSupabaseConfigured() // Will throw if not configured
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+  console.log('[Database] Using Supabase:', supabaseUrl)
   return createClient<Database>(supabaseUrl, supabaseKey)
 }
 
@@ -54,7 +47,7 @@ export const db = createUnifiedDatabase()
 
 /**
  * Database operations wrapper
- * Provides consistent API regardless of backend
+ * Provides consistent API for Supabase operations
  */
 export class UnifiedDatabase {
   private client: any
@@ -66,15 +59,15 @@ export class UnifiedDatabase {
   /**
    * Get database mode
    */
-  getMode(): 'supabase' | 'mock' {
-    return getDatabaseMode()
+  getMode(): 'supabase' {
+    return 'supabase'
   }
 
   /**
-   * Check if using mock
+   * Check if using mock (always false now)
    */
   isMock(): boolean {
-    return this.getMode() === 'mock'
+    return false
   }
 
   /**
@@ -88,19 +81,6 @@ export class UnifiedDatabase {
    * Chat Sessions
    */
   async createChatSession(userId: string, title?: string) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.insert('chat_sessions', {
-        user_id: userId,
-        title: title || 'New Chat',
-        metadata: {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      if (error) throw new Error(error.message || 'Failed to create chat session')
-      return data?.[0]
-    }
-
     const { data, error } = await this.client
       .from('chat_sessions')
       .insert({
@@ -116,16 +96,6 @@ export class UnifiedDatabase {
   }
 
   async getChatSessions(userId: string) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.select('chat_sessions', {
-        match: { user_id: userId },
-        order: { column: 'created_at', ascending: false },
-      })
-      if (error) throw new Error(error.message || 'Failed to get chat sessions')
-      return data || []
-    }
-
     const { data, error } = await this.client
       .from('chat_sessions')
       .select('*')
@@ -137,16 +107,6 @@ export class UnifiedDatabase {
   }
 
   async getChatSession(sessionId: string) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.select('chat_sessions', {
-        match: { id: sessionId },
-        limit: 1,
-      })
-      if (error) throw new Error(error.message || 'Failed to get chat session')
-      return data?.[0] || null
-    }
-
     const { data, error } = await this.client
       .from('chat_sessions')
       .select('*')
@@ -161,18 +121,6 @@ export class UnifiedDatabase {
    * Chat Messages
    */
   async createChatMessage(sessionId: string, role: string, content: string) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.insert('chat_messages', {
-        session_id: sessionId,
-        role,
-        content,
-        created_at: new Date().toISOString(),
-      })
-      if (error) throw new Error(error.message || 'Failed to create chat message')
-      return data?.[0]
-    }
-
     const { data, error } = await this.client
       .from('chat_messages')
       .insert({
@@ -188,16 +136,6 @@ export class UnifiedDatabase {
   }
 
   async getChatMessages(sessionId: string) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.select('chat_messages', {
-        match: { session_id: sessionId },
-        order: { column: 'created_at', ascending: true },
-      })
-      if (error) throw new Error(error.message || 'Failed to get chat messages')
-      return data || []
-    }
-
     const { data, error } = await this.client
       .from('chat_messages')
       .select('*')
@@ -212,20 +150,6 @@ export class UnifiedDatabase {
    * Workflows
    */
   async createWorkflow(userId: string, projectName: string, prompt: string) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.insert('workflows', {
-        user_id: userId,
-        project_name: projectName,
-        prompt,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      if (error) throw new Error(error.message || 'Failed to create workflow')
-      return data?.[0]
-    }
-
     const { data, error } = await this.client
       .from('workflows')
       .insert({
@@ -242,13 +166,6 @@ export class UnifiedDatabase {
   }
 
   async updateWorkflow(workflowId: string, updates: any) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.update('workflows', updates, { id: workflowId })
-      if (error) throw new Error(error.message || 'Failed to update workflow')
-      return data?.[0]
-    }
-
     const { data, error } = await this.client
       .from('workflows')
       .update(updates)
@@ -261,16 +178,6 @@ export class UnifiedDatabase {
   }
 
   async getWorkflow(workflowId: string) {
-    if (this.isMock()) {
-      const mockClient = this.client as DatabaseClient
-      const { data, error } = await mockClient.select('workflows', {
-        match: { id: workflowId },
-        limit: 1,
-      })
-      if (error) throw new Error(error.message || 'Failed to get workflow')
-      return data?.[0] || null
-    }
-
     const { data, error } = await this.client
       .from('workflows')
       .select('*')
