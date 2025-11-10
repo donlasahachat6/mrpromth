@@ -5,7 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../database.types'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 /**
  * Check if Supabase is properly configured
@@ -60,7 +60,7 @@ const supabase = createUnifiedDatabase()
 export const unifiedDb = {
   // Chat Sessions
   async createChatSession(userId: string, title?: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('chat_sessions')
       .insert({
         user_id: userId,
@@ -75,7 +75,7 @@ export const unifiedDb = {
   },
 
   async getChatSessions(userId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('chat_sessions')
       .select('*')
       .eq('user_id', userId)
@@ -86,7 +86,7 @@ export const unifiedDb = {
   },
 
   async getChatSession(sessionId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('chat_sessions')
       .select('*')
       .eq('id', sessionId)
@@ -102,7 +102,7 @@ export const unifiedDb = {
     sender: 'user' | 'assistant' | 'system',
     content: string
   ) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('chat_messages')
       .insert({
         session_id: sessionId,
@@ -118,7 +118,7 @@ export const unifiedDb = {
   },
 
   async getChatMessages(sessionId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('chat_messages')
       .select('*')
       .eq('session_id', sessionId)
@@ -130,7 +130,7 @@ export const unifiedDb = {
 
   // Projects
   async createProject(userId: string, name: string, userPrompt: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .insert({
         user_id: userId,
@@ -147,7 +147,7 @@ export const unifiedDb = {
   },
 
   async getProjects(userId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .select('*')
       .eq('user_id', userId)
@@ -158,7 +158,7 @@ export const unifiedDb = {
   },
 
   async getProject(projectId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .select('*')
       .eq('id', projectId)
@@ -169,7 +169,7 @@ export const unifiedDb = {
   },
 
   async updateProject(projectId: string, updates: any) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .update(updates)
       .eq('id', projectId)

@@ -6,7 +6,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 export type UserRole = 'user' | 'admin' | 'moderator'
 

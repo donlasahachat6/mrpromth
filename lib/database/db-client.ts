@@ -6,7 +6,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '../database.types'
 import { ErrorFactory } from '../utils/error-handler'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 /**
  * Database configuration

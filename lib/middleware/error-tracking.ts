@@ -4,7 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 interface ErrorLog {
   timestamp: Date

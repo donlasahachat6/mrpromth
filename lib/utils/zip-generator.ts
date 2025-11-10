@@ -8,7 +8,7 @@ import { createWriteStream, createReadStream } from 'fs'
 import { readdir, stat, mkdir } from 'fs/promises'
 import { join, relative } from 'path'
 import { createClient } from '@supabase/supabase-js'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 export interface ZipOptions {
   projectPath: string

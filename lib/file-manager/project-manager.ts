@@ -9,7 +9,7 @@ import { exec } from 'child_process'
 import { promisify } from 'util'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../database.types'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 const execAsync = promisify(exec)
 

@@ -4,7 +4,7 @@
  */
 
 import { vanchinChatCompletion } from './vanchin-client';
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 export interface ModificationRequest {
   projectId: string;

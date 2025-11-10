@@ -11,7 +11,7 @@ import { agent7Monitor } from '../agents/agent7-monitoring'
 import { createClient } from '@supabase/supabase-js'
 import { workflowEvents } from './events'
 import { ProjectManager } from '../file-manager/project-manager'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 export interface WorkflowRequest {
   userId: string

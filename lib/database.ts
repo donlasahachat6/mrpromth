@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { unifiedDb, isSupabaseConfigured } from './database/unified-db'
-import { ENV } from './env'
+import { ENV } from '@/lib/env'
 
 // Get Supabase configuration
 const { url: supabaseUrl, anonKey: supabaseAnonKey } = ENV.getSupabaseConfig();

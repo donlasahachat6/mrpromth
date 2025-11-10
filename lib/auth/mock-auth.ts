@@ -3,6 +3,8 @@
  * ใช้เมื่อ Supabase ไม่พร้อมใช้งาน
  */
 
+import { ENV } from '@/lib/env'
+
 export interface MockUser {
   id: string
   email: string

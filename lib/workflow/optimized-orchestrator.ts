@@ -9,7 +9,7 @@ import { ProjectManager } from '../file-manager/project-manager'
 import { executeWithSmartSelection, modelSelector } from '../ai/smart-model-selector'
 import { performanceMonitor } from '../utils/performance-monitor'
 import { ErrorFactory, retryWithBackoff, withTimeout } from '../utils/error-handler'
-import { ENV } from '../env'
+import { ENV } from '@/lib/env'
 
 export interface WorkflowRequest {
   userId: string
