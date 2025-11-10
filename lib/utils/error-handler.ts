@@ -4,6 +4,7 @@
  */
 
 import { NextResponse } from 'next/server'
+import { captureError } from './error-monitoring'
 
 /**
  * Error types
@@ -116,9 +117,12 @@ function logToConsole(error: AppError | Error) {
  * Send error to monitoring service
  */
 async function sendToMonitoring(error: AppError | Error) {
-  // TODO: Integrate with monitoring service (e.g., Sentry, LogRocket)
-  // For now, just log
-  console.log('[Monitoring] Error sent to monitoring service:', error.message)
+  // Use centralized error monitoring
+  if (error instanceof AppError) {
+    captureError(error, error.context, error.severity as any)
+  } else {
+    captureError(error, {}, 'medium')
+  }
 }
 
 /**
