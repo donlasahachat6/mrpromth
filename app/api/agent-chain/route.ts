@@ -67,7 +67,9 @@ async function runAgentChainInBackground({
   prompt: string;
   userId: string;
 }) {
-  const supabase = createServiceRoleSupabaseClient();
+  // Use service role if available, otherwise skip agent chain execution
+  try {
+    const supabase = createServiceRoleSupabaseClient();
   const orchestrator = new AgentChainOrchestrator({
     supabase,
     projectId,
@@ -87,5 +89,7 @@ async function runAgentChainInBackground({
       })
       .eq("id", projectId)
       .eq("user_id", userId);
+  } catch (setupError) {
+    console.error("Service role not configured, skipping agent chain:", setupError);
   }
 }
