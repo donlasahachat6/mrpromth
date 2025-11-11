@@ -70,25 +70,26 @@ async function runAgentChainInBackground({
   // Use service role if available, otherwise skip agent chain execution
   try {
     const supabase = createServiceRoleSupabaseClient();
-  const orchestrator = new AgentChainOrchestrator({
-    supabase,
-    projectId,
-    userId,
-  });
+    const orchestrator = new AgentChainOrchestrator({
+      supabase,
+      projectId,
+      userId,
+    });
 
-  try {
-    await orchestrator.execute(prompt);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown agent chain error";
-    await supabase
-      .from("projects")
-      .update({
-        status: "error",
-        error_message: message,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", projectId)
-      .eq("user_id", userId);
+    try {
+      await orchestrator.execute(prompt);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown agent chain error";
+      await supabase
+        .from("projects")
+        .update({
+          status: "error",
+          error_message: message,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", projectId)
+        .eq("user_id", userId);
+    }
   } catch (setupError) {
     console.error("Service role not configured, skipping agent chain:", setupError);
   }
