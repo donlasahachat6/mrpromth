@@ -4,7 +4,6 @@ import { ENV } from '@/lib/env'
 
 // Get Supabase configuration
 const { url: supabaseUrl, anonKey: supabaseAnonKey } = ENV.getSupabaseConfig();
-const { serviceRoleKey: supabaseServiceRoleKey } = ENV.getServiceRoleConfig();
 
 // Ensure Supabase is configured (skip during build)
 if (!ENV.isBuildTime()) {
@@ -20,10 +19,8 @@ export function createServiceRoleSupabaseClient() {
     return createClient('https://placeholder.supabase.co', 'placeholder-service-key');
   }
   
-  if (!ENV.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Service role key not configured');
-  }
-  return createClient(supabaseUrl, supabaseServiceRoleKey);
+  const { serviceRoleKey } = ENV.getServiceRoleConfig();
+  return createClient(supabaseUrl, serviceRoleKey);
 }
 
 // Chat Sessions
